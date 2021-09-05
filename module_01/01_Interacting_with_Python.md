@@ -639,7 +639,7 @@ y=20
 if x<y and y==20:
     print('y is 20 and x is less than y')
 else:
-    print('x is not less than y')
+    print(' x is not less than y')
 ```
 
 4. Create a script that takes the clock hour in 24 hours and prints the clock hour with am or pm. 
