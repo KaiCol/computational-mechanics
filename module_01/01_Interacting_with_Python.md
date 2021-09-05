@@ -4,10 +4,10 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
-    format_version: 0.12
-    jupytext_version: 1.6.0
+    format_version: 0.13
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -196,6 +196,10 @@ Here's an interesting case:
 9**1/2
 ```
 
+```{code-cell} ipython3
+8%3
+```
+
 ##### Discussion point:
 _What happened?_ Isn't $9^{1/2} = 3$? (Raising to the power $1/2$ is the same as taking the square root.) Did Python get this wrong?
 
@@ -246,7 +250,14 @@ Use Python (as a calculator) to solve the following two problems:
 2. Suppose the cover price of a book is $\$ 24.95$, but bookstores get a $40\%$ discount. Shipping costs $\$3$ for the first copy and $75$ cents for each additional copy. What is the total wholesale cost for $60$ copies? Compare your answer with the solution up to 2 decimal numbers.
 
 ```{code-cell} ipython3
+import numpy as np
 
+Vsphere = round((4/3)*np.pi*(6.65/2)**3,4)
+
+c = 60
+Pbook = round(24.95*c*0.6+3+(c-1)*0.75,2)
+
+print("The Volume of the sphere is", Vsphere,f"cm^3 and the book costs ${Pbook}")
 ```
 
 To reveal the answers, highlight the following line of text using the mouse:
@@ -299,7 +310,7 @@ y = 4.5
 Print the values of the variables `x` and `y`.
 
 ```{code-cell} ipython3
-
+print(x,y)
 ```
 
 Let's do some arithmetic operations with our new variables:
@@ -578,10 +589,15 @@ Throughout this course module, you will be drawing from the following references
     c. What is the result of the following logical operation, `volume>1000` (in inches^3)
 
 ```{code-cell} ipython3
+Vbox = 12.5*11*14 #inches^3
+mbox = 31 #lbs
+rhobox = round(mbox/Vbox, 4)
+test = Vbox > 1000
 
+print(f"a. The volume is {Vbox} in^3\nb. The average density is {rhobox} lb/in^3\nc. The results are {test}")
 ```
 
-2. Use the variables given below, `str1` and `str2`, and check the following 
+ Use the variables given below, `str1` and `str2`, and check the following 
 
     a. `str1<str2`
     
@@ -594,6 +610,12 @@ Throughout this course module, you will be drawing from the following references
 ```{code-cell} ipython3
 str1 = 'Python'
 str2 = 'python'
+
+a = str1<str2
+b = str1.lower()==str2
+c = str1>str2
+
+print(f'a.{a}\nb.{b}\nc.{c}')
 ```
 
 3. The following code has an error, fix the error so that the correct result is returned:
@@ -611,7 +633,13 @@ else:
 ```
 
 ```{code-cell} ipython3
+x=1
+y=20
 
+if x<y and y==20:
+    print('y is 20 and x is less than y')
+else:
+    print('x is not less than y')
 ```
 
 4. Create a script that takes the clock hour in 24 hours and prints the clock hour with am or pm. 
@@ -619,11 +647,15 @@ else:
     Hint: Use an if-else statement with `print` commands
 
 ```{code-cell} ipython3
-time = 22
-if time > 12:
-    print(time - 12, 'PM')
-elif time < 12:
-    print(time, 'AM')
+import numpy as np 
+for time in range(0,24):
+    if time > 12:
+        print(time - 12, 'PM')
+    elif time < 12:
+        print(time, 'AM')
+    elif time == 12:
+        print('12 PM')
+    ;
 ```
 
 ```{code-cell} ipython3
