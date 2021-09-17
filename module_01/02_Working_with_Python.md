@@ -775,27 +775,38 @@ Pick two different operations to apply to the `xarray` and plot them the resulti
     b. Use your function to plot sin(x) and cos(x) for x=$0..2\pi$
 
 ```{code-cell} ipython3
-#part 1
+#Part A - Creating the sincos function
 def sincos(inputx):
-    '''Sincos(inputx) will put the inputx through both a sin and cos operation and return them both as sine,cos'''
+    '''
+     
+    Sincos(inputx) will put the inputx through both a sin and cos operation and return them both as sine,cos
+    
+    Arguments
+    ---------
+    input_value: a domain x
+    
+    Returns
+    -------
+    sine,cosine of input domain'''
+    
     x=(np.sin(inputx))
     y=(np.cos(inputx))
     return x, y
 
-domain = np.linspace(0,2*np.pi,100)
+x = np.linspace(0,2*np.pi,20) #I chose 20 steps to make the graph less blocky
 
-result1,result2 = sincos(domain)
+sin,cos = sincos(x)
 
 
-#Part 2
+#Part B - Plotting the sincos function
 
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 20})
 plt.rcParams['lines.linewidth'] = 3
 #Plot Sine
-plt.plot(domain, result1, color='red', linestyle='-', label='$Sin(x)$')
+plt.plot(x, sin, color='red', linestyle='-', label='$Sin(x)$')
 #Plot Cose
-plt.plot(domain, result2, color='green', linestyle='-', label='$Cos(x)$')
+plt.plot(x, cos, color='green', linestyle='-', label='$Cos(x)$')
 #Plot the legends in the best location
 plt.legend(loc='best');
 plt.grid()
@@ -811,16 +822,19 @@ of the two indices from 0 to 9 e.g. A_99[3,2]=6 and A_99[4,4]=16.
     c. Calculate the standard deviation of `A_99`
 
 ```{code-cell} ipython3
-%%time
+#Create the A_99 Array
+%time
 A_99o = []
 for x in range(10):
     for y in range(10):
         A_99o.append(x*y)
 A_99 = np.reshape (A_99o,(10,10))
 
-average = sum(sum(A_99))/len(A_99)
-std = round(np.std(A_99),2)
+print(A_99) #Print to show it works
 
+#Calculating the mean and std for parts B and C
+average = np.mean(A_99)
+std = round(np.std(A_99),2) #
 print(f'The mean is {average} standard deviation is {std}')
 ```
 
@@ -835,7 +849,20 @@ print(f'The mean is {average} standard deviation is {std}')
     d. create a filled contour plot of X, Y, A_99 [contourf plot documentation](https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.contourf.html)
 
 ```{code-cell} ipython3
-range(5)
+%%time
+
+#grid multiplication to create A_99
+X,Y = np.meshgrid(np.arange(0,10),np.arange(0,10))
+A_99 = np.multiply(X,Y)
+mean = np.mean(A_99)
+print(A_99)
+
+#Creation of the contour plot
+import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 20})
+plt.rcParams['lines.linewidth'] = 3
+plt.contourf(X,Y,A_99)
+print(mean)
 ```
 
 4. The following linear interpolation function has an error. It is supposed to return y(x) given the the two points $p_1=[x_1,~y_1]$ and $p_2=[x_2,~y_2]$. Currently, it just returns and error.
@@ -862,6 +889,8 @@ def linInterp(x,p1,p2):
     slope = (p2[1]-p1[1])/(p2[0]-p1[0])
 
     return p1[1]+slope*(x - p1[0])
+
+#Test the function to make sure it's operational 
 x = np.arange(0,10)
 p1 = np.array([1,5])
 p2 = np.array([5,25])
@@ -872,7 +901,6 @@ import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 20})
 plt.rcParams['lines.linewidth'] = 3
 #Plot
-print(y)
 plt.plot(x, y, color='red', linestyle='-', label='$LinearInter in$')
 ```
 

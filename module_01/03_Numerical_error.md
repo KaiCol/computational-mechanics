@@ -4,10 +4,10 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
-    format_version: 0.12
-    jupytext_version: 1.6.0
+    format_version: 0.13
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -69,7 +69,9 @@ import matplotlib.pyplot as plt
 Calculate the terminal velocity for the given parameters, g=9.81 m/s$^2$, c=0.25 kg/m, m=60 kg.
 
 ```{code-cell} ipython3
-
+g=9.81 #m/s^2
+c=0.25 #kg/m
+m=60 #kg
 ```
 
 ```{code-cell} ipython3
@@ -239,7 +241,19 @@ If you increase the number of time steps from 0 to 12 seconds what happens to v_
 What happens when you decrease the number of time steps?
 
 ```{code-cell} ipython3
+t=np.linspace(0,12,10)
+v_numerical=np.zeros(len(t));
+for i in range(1,len(t)):
+    v_numerical[i]=v_numerical[i-1]+((g-c/m*v_numerical[i-1]**2))*2;
 
+plt.plot(t,v_analytical(t,m,g,c),'-',label='analytical')
+plt.plot(t,v_numerical,'o-',label='numerical')
+plt.legend()
+plt.xlabel('time (s)')
+plt.ylabel('velocity (m/s)')
+
+print("The numberical analysis will start to diverge from the analytical and will hit a ceiling really quickly,\
+ The analytical wil get more accurate and retain its shampe with less jagged edges")
 ```
 
 ## Errors in Numerical Modeling
@@ -406,6 +420,7 @@ for i in range(1,N):
 
 s2=1+500*eps
 print('summation 1+eps/2 over ',N,' minus 1 =',(s2-1))
+print('------------------------------')
 print(N/2,'*eps=',(s2-1))
 ```
 
@@ -415,7 +430,18 @@ print(N/2,'*eps=',(s2-1))
 
 2. What is machine epsilon for a 32-bit floating point number?
 
-+++
+```{code-cell} ipython3
+s1=1;
+N=2
+eps=np.finfo('float32').eps
+for i in range(1,N):
+    s1+=eps/2;
+
+s2=1+N/2*eps
+print('summation 1+eps/2 over ',N,' minus 1 =',(s2-1))
+print('------------------------------')
+print(N/2,'*eps=',(s2-1))
+```
 
 ## Freefall Model (revisited)
 
@@ -542,7 +568,7 @@ plt.plot(t,v_analytical,label='analytical')
 plt.title('First 2 seconds of freefall')
 plt.xlabel('time (s)')
 plt.ylabel('speed (m/s)')
-plt.legend()
+plt.legend();
 ```
 
 ### Exercise
@@ -633,22 +659,51 @@ d. Discussion question: If you decrease the time steps further and the solution
 **Note: We have used a new function `np.loadtxt` here. Use the `help` or `?` to learn about what this function does and how the arguments can change the output. In the next module, we will go into more details on how to load data, plot data, and present trends.**
 
 ```{code-cell} ipython3
-import numpy as np
 year, pop = np.loadtxt('../data/world_population_1900-2020.csv',skiprows=1,delimiter=',',unpack=True)
 print('years=',year)
 print('population =', pop)
 ```
 
-
 ```{code-cell} ipython3
-print('average population changes 1900-1950, 1950-2000, 2000-2020')
+print('a. average population changes 1900-1950, 1950-2000, 2000-2020')
 print((pop[1:] - pop[0:-1])/(year[1:] - year[0:-1]))
-print('average growth of 1900 - 2020')
+print('b. average growth of 1900 - 2020')
 print(np.mean((pop[1:] - pop[0:-1])/(year[1:] - year[0:-1])))
 ```
 
-__d.__ As the number of time steps increases, the Euler approximation approaches the analytical solution, not the measured data. The best-case scenario is that the Euler solution is the same as the analytical solution.
+```{code-cell} ipython3
+#Part C
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
 
+#Creating the variables
+kg = 0.013
+step = 20
+time = np.linspace(0,2020-1900,step)
+dt = t[1]-t[0]
+
+pop2 = np.zeros(len(t))
+pop2[0] = 1578000000
+
+#Creating the Euler method and then the analytical method
+for i in range(len(t)-1):
+    pop2[i+1] = kg*pop2[i]*dt + pop2[i]
+    
+analytical_solution= pop2[0]*np.exp(kg*time)
+
+t = np.linspace(1900,2020,step)
+plt.plot (t, analytical_solution,'-',label='analytical')
+plt.plot (t, pop2,'o-' ,label='numerical')
+plt.legend();
+```
+
+```{code-cell} ipython3
+print('If the time steps got smaller, I think it will converge to the actual population. As I increase the amount of steps within a time period,\
+the analytical does get closer to the actual line. This is in part due to the reducing the size of the error to the point where its negligiable')
+```
+
+__d.__ As the number of time steps increases, the Euler approximation approaches the analytical solution, not the measured data. The best-case scenario is that the Euler solution is the same as the analytical solution.
 
 +++
 
@@ -679,6 +734,46 @@ def exptaylor(x,n):
             ex+=x**(i+1)/factorial(i+1) # add the nth-order result for each step in loop
         return ex
         
+```
+
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+%time
+#a. 
+exp1f = exptaylor(1,2)
+exp1n = np.exp(1)
+
+print(f'a. using the funtion, the function provides an answer of {exp1f} and the numpy returns {exp1n}\n when compared, the function runs into the problem of not having a higher error than\
+compared to the np. althought the error gets smaller as the order goes higher until the 17th order where the error is not visiable anymore')
+```
+
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+%time
+#b.
+exp2f = exptaylor(1,10)
+print ('I would have to estimate that the an 100,000th order would take about 100,000*6.2 µs, or 1.5 hours')
+```
+
+```{code-cell} ipython3
+n = np.arange(1, 10) # create an array of n
+N = len(n)
+Rerror = np.zeros(N, dtype = np.float32)    # initialize an N-valued array of relative errors
+exp_np= np.exp(1)
+
+for i in range(0,N):
+    exp_anal= exptaylor(1,n[i]) # return values for Taylor Function
+    Rerror[i] =abs((exp_anal-exp_np))/exp_np #calculate relative error between numpy and function
+
+#Visualizing the error within a plot
+plt.plot(n, Rerror,'o-')
+plt.xlabel('Degrees of Freedom N')
+plt.ylabel('relative error')
+plt.title('Relative Errors Within TaylorFunct')
 ```
 
 ```{code-cell} ipython3

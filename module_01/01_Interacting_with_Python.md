@@ -651,10 +651,8 @@ import numpy as np
 for time in range(0,24):
     if time > 12:
         print(time - 12, 'PM')
-    elif time < 12:
+    elif time <= 12:
         print(time, 'AM')
-    elif time == 12:
-        print('12 PM')
     ;
 ```
 
