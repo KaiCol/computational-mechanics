@@ -12,10 +12,10 @@ kernelspec:
   name: python3
 ---
 
+```{raw-cell}
 > __Content modified under Creative Commons Attribution license CC-BY
 > 4.0, code under BSD 3-Clause License © 2020 R.C. Cooper__
-
-+++
+```
 
 # 02 - Working with Python
 

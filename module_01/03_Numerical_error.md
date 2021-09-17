@@ -590,6 +590,7 @@ In the next plot, you consider the relative error for the velocity at t=2 s, as 
 $^+$ Note: In practice, there is no reason to restrict the precision of floating point numbers. The function was written this way to highlight the effect of roundoff error without significant computational resources. You would need more timesteps to observe floating point error with 64-bit floating point numbers.
 
 ```{code-cell} ipython3
+%time
 n = np.arange(500, 100000, 500) # create an array from 10^1 to 10^3 with N values
 N = len(n)
 error = np.zeros(N, dtype = np.float32)    # initialize an N-valued array of relative errors
@@ -665,9 +666,14 @@ print('population =', pop)
 ```
 
 ```{code-cell} ipython3
+#Part A
 print('a. average population changes 1900-1950, 1950-2000, 2000-2020')
-print((pop[1:] - pop[0:-1])/(year[1:] - year[0:-1]))
-print('b. average growth of 1900 - 2020')
+avrgpop = (pop[1:] - pop[0:-1])/(year[1:] - year[0:-1])
+
+#Part B
+print('b. Average Growth of 1900-1950, 1950-2000, and 2000-2020')
+print(((pop[1:] - pop[0:-1])/(year[1:] - year[0:-1]))/pop[1:])
+print('Average growth of 1900 - 2020')
 print(np.mean((pop[1:] - pop[0:-1])/(year[1:] - year[0:-1])))
 ```
 
@@ -679,7 +685,8 @@ import matplotlib.pyplot as plt
 
 #Creating the variables
 kg = 0.013
-step = 20
+step = 6
+t = np.linspace(1900,2020,step)
 time = np.linspace(0,2020-1900,step)
 dt = t[1]-t[0]
 
@@ -692,7 +699,6 @@ for i in range(len(t)-1):
     
 analytical_solution= pop2[0]*np.exp(kg*time)
 
-t = np.linspace(1900,2020,step)
 plt.plot (t, analytical_solution,'-',label='analytical')
 plt.plot (t, pop2,'o-' ,label='numerical')
 plt.legend();
@@ -737,26 +743,26 @@ def exptaylor(x,n):
 ```
 
 ```{code-cell} ipython3
+%%time
 import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
-%time
 #a. 
 exp1f = exptaylor(1,2)
 exp1n = np.exp(1)
 
-print(f'a. using the funtion, the function provides an answer of {exp1f} and the numpy returns {exp1n}\n when compared, the function runs into the problem of not having a higher error than\
-compared to the np. althought the error gets smaller as the order goes higher until the 17th order where the error is not visiable anymore')
+print(f'a.using the funtion, the function provides an answer of {exp1f} and the numpy returns {exp1n}\n when compared, the function runs into the problem of having a bigger error than\
+ compared to the np. The error does get smaller as the order goes higher until the 17th order where the error is negligiable')
 ```
 
 ```{code-cell} ipython3
+%%time
 import numpy as np
 import matplotlib.pyplot as plt
 %matplotlib inline
-%time
 #b.
 exp2f = exptaylor(1,10)
-print ('I would have to estimate that the an 100,000th order would take about 100,000*6.2 µs, or 1.5 hours')
+print ('I would have to estimate that the an 100,000th order would take about (100,000)*957 µs, or 95.7 seconds')
 ```
 
 ```{code-cell} ipython3
