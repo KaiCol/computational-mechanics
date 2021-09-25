@@ -191,16 +191,17 @@ x = np.linspace(6,13,50)
 z = np.zeros(len(x))
 for i in range(len(x)):
     z[i] = ambiTemp(x[i])
-#print(z)
+print(z)
 plt.plot (x,z)
 
 '''The original plot I got showed a step plot. This is because it is under the assumtion that the 
 tempeterure stays the same through the hour and instantly changes once it hits a checkpoint. The final version
-I went with a linear line between the points.'''
+I went with a linear line between the points.
+
+'''
 ```
 
 ```{code-cell} ipython3
-#Part 4b Part 1
 t = np.linspace(6,13,50)
 ta = (t-6)
 dt = t[1]-t[0]
@@ -219,40 +220,6 @@ for i in range(mark): #solving for 6-11AM
     T[mark-i-1] = (k*ambiTemp(t[mark-i-1])-(T[mark-i]/dt))/(-1/dt+k)
 
 #Solving analytically
-tanal = np.arange(6,14)
-Tanal = np.zeros(len(tanal))
 
-for i in range(len(Tanal)):
-    Tanal[i] = ambiTemp(tanal[i]) + (85-ambiTemp(tanal[i]))*np.exp(-k*(tanal[i]-11))
-
-'''I found that numerical is harder than analytical to program, but it is easier to change variables than in analyticals
-but changing the variables are a little easier to do. I think numerically might be a little more accurate in terms
-of smaller time steps than analytical . One thing i found challenging is bookkeeping and just remembering
-what positions I am calling on. Setting the 11am as 85 was hard because sometimes timesteps didn't have an 11am, I solved this
-by setting the closest point to 11 as 85'''
-                                                                                                    
-plt.plot (tanal, Tanal,'o-',label='analytical')
-plt.plot (t, T,'o-' ,label='numerical')
-plt.legend()
-
-#4b Part 2
-hori = np.zeros(len(t))
-for i in range(len(t)):
-    hori[i]= 98.6
-plt.plot(t,hori, linewidth = 3);
-```
-
-```{code-cell} ipython3
-#Doing some guess work by zooming in at around where the line y = 98.6 and numerical solution crosses
-#print(np.where(t == 9))
-#print(np.where(t < 9.5))
-mark11 = 21 
-mark22 = 23
-print("looks like our body died at around 9.125 hours or 9:07 Am")
-plt.plot (t[mark11:mark22], T[mark11:mark22],'o-' ,label='numerical')
-plt.plot(t[mark11:mark22],hori[mark11:mark22], linewidth = 3);
-```
-
-```{code-cell} ipython3
-
+    
 ```

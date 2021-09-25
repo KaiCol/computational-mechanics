@@ -691,6 +691,7 @@ time = np.linspace(0,2020-1900,step)
 dt = t[1]-t[0]
 
 pop2 = np.zeros(len(t))
+print(pop2)
 pop2[0] = 1578000000
 
 #Creating the Euler method and then the analytical method
