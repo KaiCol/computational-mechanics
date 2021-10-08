@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -83,10 +83,10 @@ beers = pd.read_csv('../data/beers.csv')
 type(beers)
 ```
 
-This is a new data type for us: a `pandas DataFrame`. From the `pandas` documentation: "A `DataFrame`  is a 2-dimensional labeled data structure with columns of potentially different types" [4]. You can think of it as the contens of a spreadsheet, saved into one handy Python variable. If you print it out, you get a nicely laid-out table: 
+This is a new data type for us: a `pandas DataFrame`. From the `pandas` documentation: "A `DataFrame`  is a 2-dimensional labeled data structure with columns of potentially different types" [4]. You can think of it as the contens of a spreadsheet, saved into one handy Python variable. If you print it out, you get a nicely laid-out table:
 
 ```{code-cell} ipython3
-beers
+(beers)
 ```
 
 Inspect the table above. The first column is a numbering scheme for the beers. The other columns contain the following data:
@@ -130,7 +130,7 @@ beers['abv'][:10]
 
 Inspect the data in the table again: you'll notice that there are `NaN` (not-a-number) elements in both the `abv` and `ibu` columns. Those values mean that there was no data reported for that beer. A typical task when cleaning up data is to deal with these pesky `NaN`s.
 
-Let's extract the two series corresponding to the `abv` and `ibu` columns, clean the data by removing all `NaN` values, and then access the values of each series and assign them to a numpy array. 
+Let's extract the two series corresponding to the `abv` and `ibu` columns, clean the data by removing all `NaN` values, and then access the values of each series and assign them to a numpy array.
 
 ```{code-cell} ipython3
 abv_series = beers['abv']
@@ -156,7 +156,7 @@ Remember that a a `pandas` _Series_ consists of a column of values, and
 their labels. You can extract the values via the
 [`series.values`](https://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.values.html)
 attribute, which returns a `numpy.ndarray` (multidimensional array). In
-the case of the `abv_clean` series, you get a one-dimensional array. You save it into the variable name `abv`. 
+the case of the `abv_clean` series, you get a one-dimensional array. You save it into the variable name `abv`.
 
 ```{code-cell} ipython3
 abv = abv_clean.values
@@ -195,6 +195,8 @@ Write a Python function that calculates the percentage of missing values for a c
 For the original series, before cleaning, remember that you can access the values with `series.values` (e.g., `abv_series.values`).
 
 ```{code-cell} ipython3
+print('abv', len(abv)/len(abv_series.values))
+print('ibu', len(ibu)/len(ibu_series.values))
 ```
 
 > __Important__:
@@ -371,7 +373,7 @@ Below is a graphical distinction between the _sample_ and the _population_ from 
 Now that you have the math sorted out, you can program functions to
 compute the variance and the standard deviation. In your case, you are
 working with samples of the population of craft beers, so you need to use
-the formulas with $N-1$ in the denominator. 
+the formulas with $N-1$ in the denominator.
 
 ```{code-cell} ipython3
 def sample_var(array):
@@ -420,13 +422,17 @@ def var_pythonic(array):
     Returns
     -------
     var   : float, variance of the array .
+    
     """
+    mean = np.mean(array)
+    N = len(array)
+    var = np.sum(((element - mean)**2) / (N - 1))
     
     return var
 ```
 
-
 ```{code-cell} ipython3
+
 ```
 
 You have the sample variance, so you take its square root to get the
@@ -471,7 +477,7 @@ around the mean value, while the `ibu` values are quite spread out from
 their mean. How could you check these descriptions of the data? A good way of doing so is using graphics: various types of plots can tell us things about the data. 
 
 You'll learn about _histograms_ in this lesson, and in the following
-lesson you'll explore _box plots_. 
+lesson you'll explore _box plots_.
 
 +++
 
@@ -541,7 +547,7 @@ result!
 > ```python
 > plt.style.use('fivethirtyeight')
 > ```
-> I'll use this in most of the notebooks. 
+> I'll use this in most of the notebooks.
 
 ```{code-cell} ipython3
 #You can set the size of the figure by doing:
@@ -560,7 +566,7 @@ pyplot.ylabel('Frequency');
 pyplot.figure(figsize=(10,5))
 
 #Plotting
-pyplot.hist(ibu, bins=20, color=(0.9, 0.5, 0, 0.9), histtype='bar', edgecolor='white') 
+pyplot.hist(ibu, bins=20, color=(0.9, 0.5, 0, 0.9), histtype='bar', edgecolor='k') 
 #The \n is to leave a blanck line between the title and the plot
 pyplot.title('ibu \n')
 pyplot.xlabel('International Bittering Units (ibu)')
@@ -590,9 +596,9 @@ Play around with the plots, change the values of the bins, colors, etc.
 pyplot.figure(figsize=(10,5))
 
 #Plotting
-pyplot.hist(ibu, bins=20, color=(0.9, 0.1, 0.3, 0.6), histtype='bar', edgecolor='white') 
+#pyplot.hist(ibu, bins=20, color=(0.9, 0.1, 0.3, 0.6), histtype='bar', edgecolor='white') 
 #pyplot.hist(ibu, bins=20, color=(0.9, 0.8, 0, 0.1), histtype='bar', edgecolor='white') 
-#pyplot.hist(ibu, bins=20, color=(0.1, 0.1, 0, 0.1), histtype='bar', edgecolor='white') 
+pyplot.hist(ibu, bins=20, color=(0.1, 0.1, 0, 0.1), histtype='bar', edgecolor='white') 
 #The \n is to leave a blanck line between the title and the plot
 pyplot.title('ibu \n')
 pyplot.xlabel('International Bittering Units (ibu)')
@@ -643,7 +649,9 @@ how the following piece of code works.
 2. Check what happens if you sum booleans. For example, `True + True`, `True + False` and so on.
 
 ```{code-cell} ipython3
-
+'''I think that skewness will cause the percentage distributions to lean one way or another depending on the type of skew.
+It will also change the location of the medium '''
+x[x<mean_x]/len(x)*100
 ```
 
 Now, using the same idea, you will calculate the number of elements in each interval of width $(1\sigma, 2\sigma, 3\sigma)$, and get the corresponding percentage. 
@@ -737,7 +745,7 @@ print('The percentage of coverage at 2 std of the ibu_mean is : {:.2f} %'.format
 print('The percentage of coverage at 3 std of the ibu_mean is : {:.2f} %'.format(ibu_std3_per))
 ```
 
-Notice that in both cases the percentages are not that far from the values for normal distribution (68%, 95%, 99.7%), especially for $2\sigma$ and $3\sigma$. So usually you can use these values as a rule of thumb. 
+Notice that in both cases the percentages are not that far from the values for normal distribution (68%, 95%, 99.7%), especially for $2\sigma$ and $3\sigma$. So usually you can use these values as a rule of thumb.
 
 +++
 
@@ -796,3 +804,19 @@ b. Load the csv into a pandas dataframe. How many missing values
 in the column with the number of transistors? What fraction are
 missing?
 
+```{code-cell} ipython3
+cpus = pd.read_csv('../data/transistor_data.csv')
+cpus
+print('There are 6 headings. Processor. MOS transistor count, Date of Intro, Designer, MOS process, and area')
+```
+
+```{code-cell} ipython3
+trans = cpus['MOS transistor count']
+trans_clean = trans.dropna()
+print(f"{round(100*(1-(len(trans_clean)/len(trans))),2)} percent is Nan and there are \
+{len(trans)-len(trans_clean)} NaNs in transistors")
+```
+
+```{code-cell} ipython3
+
+```
