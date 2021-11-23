@@ -806,8 +806,8 @@ missing?
 
 ```{code-cell} ipython3
 cpus = pd.read_csv('../data/transistor_data.csv')
-cpus
 print('There are 6 headings. Processor. MOS transistor count, Date of Intro, Designer, MOS process, and area')
+cpus
 ```
 
 ```{code-cell} ipython3

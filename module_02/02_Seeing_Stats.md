@@ -147,6 +147,7 @@ Let's repeat here the process for extracting and cleaning the two series, and ge
 abv_series = beers['abv']
 abv_clean = abv_series.dropna()
 abv = abv_clean.values
+len(abv)
 ```
 
 ```{code-cell} ipython3
@@ -154,6 +155,7 @@ abv = abv_clean.values
 ibu_series = beers['ibu']
 ibu_clean = ibu_series.dropna()
 ibu = ibu_clean.values
+len(ibu)
 ```
 
 Let's also repeat a histogram plot for the `abv` variable, but this time choose to plot just 10 bins (you'll see why in a moment).
@@ -218,12 +220,17 @@ Therefore, you need to be explicit about the division by $N-1$ when calling `np.
 For example, to compute the sample variance for your `abv` variable, you do:
 
 ```{code-cell} ipython3
+# <<<<<<< HEAD
 
+# =======
+# var_abv = np.var(abv, ddof = 1)
+# >>>>>>> 94831127065de94926f3ff605114c2515070ce3a
 ```
 
 Now, you can compute the standard deviation by taking the square root of `var_abv`:
 
 ```{code-cell} ipython3
+var_abv = np.var(abv, ddof = 1)
 std_abv = np.sqrt(var_abv)
 print(std_abv)
 ```
@@ -422,7 +429,11 @@ We run into a bit of a problem, though. The way you handled the beer data above,
 Let's instead clean the whole `beers` dataframe (which will completely remove any row that has a null entry), and _then_ extract the values of the two series into NumPy arrays.
 
 ```{code-cell} ipython3
+print(len(beers))
+
 beers_clean = beers.dropna()
+
+len(beers_clean)
 ```
 
 ```{code-cell} ipython3
@@ -433,6 +444,8 @@ len(ibu)
 ```{code-cell} ipython3
 abv = beers_clean['abv'].values
 len(abv)
+
+        
 ```
 
 Notice that both arrays now have 1403 entries—not 1405 (the length of the clean `ibu` data), because two rows that had a non-null `ibu` value _did_ have a null `abv` value and were dropped.
@@ -467,6 +480,7 @@ Here's what you want to do: group beers by style, then compute the mean of `abv`
 
 ```{code-cell} ipython3
 beers_styles = beers_clean.drop(['Unnamed: 0','name','brewery_id','ounces','id'], axis=1)
+beers_styles
 ```
 
 We now have a dataframe with only the numeric features `abv` and `ibu`, and the categorical feature `style`. Let's find out how many beers you have of each style—you'd like to use this information to set the size of the style bubbles.
@@ -515,6 +529,10 @@ style_counts = style_counts.sort_index()
 
 ```{code-cell} ipython3
 style_counts[0:10]
+```
+
+```{code-cell} ipython3
+len(style_means)
 ```
 
 Above, you used Matplotlib to create a scatter plot using two NumPy arrays as the `x` and `y` parameters. Like you saw previously with histograms, `pandas` also has available some plotting methods (calling Matplotlib internally). Scatter plots made easy!
@@ -599,7 +617,31 @@ our dataset by removing rows that do not include the IBU measure.
     scatter plot with `beers_filled`. What differences do you notice between the plots?
 
 ```{code-cell} ipython3
+#Part A
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
 
+#Cleaning the data and calculaing the mean
+beers = pd.read_csv("../data/beers.csv")
+beers_filled = beers.fillna(0)
+beers_styles = beers_filled.drop(['Unnamed: 0','name','brewery_id','ounces','id'], axis=1)
+
+style_countsa = beers_styles['style'].value_counts()
+style_countsa = style_countsa.sort_index()
+
+style_meansa = beers_styles.groupby('style').mean()
+
+print(len(style_countsa))
+#Plotting
+style_meansa.plot.scatter(figsize=(8,8), 
+                         x='abv', y='ibu', s=style_countsa, 
+                         title='Beer ABV vs. IBU mean values by style for A');
+# style_means.plot.scatter(figsize=(8,8), 
+#                          x='abv', y='ibu', s=style_counts, 
+#                          title='Beer ABV vs. IBU mean values by style');
+'''I notice that there is more data points on the filled graph than the unfilled graph. This means that points that are originally bigger on the dropped beers graph is actually smaller and there exists points close to 0. This is due to the extra 0 being filled in rather than just straight up dropped'''
 ```
 
 2. Gordon Moore created an empirical prediction that the rate of
@@ -622,6 +664,50 @@ until 2015.
     b. Create a semilog y-axis scatter plot (i.e. `plt.semilogy`) for the 
     "Date of Introduction" vs "MOS transistor count". 
     Color the data according to the "Designer".
+
+```{code-cell} ipython3
+#Part A
+cpu = pd.read_csv('../data/transistor_data.csv')
+cpuf = cpu.fillna(0)
+cpu2017 = cpuf[cpuf["Date of Introduction"] == 2017]
+
+transis = cpu2017['MOS transistor count']
+plt.boxplot(transis, labels=['MOS Transistor Counts']);
+
+Q1_abv = np.percentile(transis, q=25)
+Q2_abv = np.percentile(transis, q=50)
+Q3_abv = np.percentile(transis, q=75)
+
+
+print('The first quartile for abv is {}'.format(Q1_abv))
+print('The second quartile for abv is {}'.format(Q2_abv))
+print('The third quartile for abv is {}'.format(Q3_abv))
+```
+
+```{code-cell} ipython3
+#Part B
+cpu = pd.read_csv('../data/transistor_data.csv')
+cpuf = cpu.fillna(0)
+
+designers = ['Intel','AMD','IBM','Apple', 'Fujitsu', 'Motorola', ' Qualcomm', 'Huawei', 'Acorn',\
+             'NEC', 'Hitachi', 'ARM', 'Zilog', 'Texas Instrument', 'WDC', 'RCA', 'DEC', 'Offete Ennterprises',\
+             'Microsoft/AMD', 'Masushita', 'SiFive','Oracle','Nvidia','Samsung', 'Sun/Oracle', 'Garrett AiResearch',\
+             'Sony/IBM/Toshiba', 'IBM/Nintendo','Sony/Toshiba', 'Acorn/DEC/Apple','MIPS','DEC WRL','Harris Corporation',\
+             'Bell Labs', 'Intersil','MOS Technology','Amazon']
+
+for d in designers:
+    data = cpuf[cpuf['Designer'] == d]
+    plt.semilogy(data['Date of Introduction'], data['MOS transistor count'],'o', label = d)
+    
+plt.xlabel('Year')
+plt.ylabel('MOS Transistor Count');
+plt.title('MOS Transistor Count colored by Designer')
+#plt.legend()
+```
+
+```{code-cell} ipython3
+
+```
 
 ```{code-cell} ipython3
 
