@@ -5,12 +5,13 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
+
 > __Content modified under Creative Commons Attribution license CC-BY
 > 4.0, code under BSD 3-Clause License © 2020 R.C. Cooper__
 
@@ -131,9 +132,7 @@ In these two lines, you are dividing the interval into `ns`-equally-spaced value
     i_zeros = np.nonzero(delta_sign_f!=0)
 ```
 
-On these three lines, you are looking for sign-changes in the array `f`. First, you get just the sign of each array value with `np.sign`. Then, you look at the changes in sign with the difference between f[i] and f[i-1] for i=1...len(f). Finally, you get the indices sign changes by looking for nonzero elements in `delta_sign_f`. 
-
-
+On these three lines, you are looking for sign-changes in the array `f`. First, you get just the sign of each array value with `np.sign`. Then, you look at the changes in sign with the difference between f[i] and f[i-1] for i=1...len(f). Finally, you get the indices sign changes by looking for nonzero elements in `delta_sign_f`.
 
 +++
 
@@ -178,7 +177,6 @@ def incsearch(func,xmin,xmax,ns=50):
 
 To test your `incsearch` function on a known function, let's try finding all the times that $sin(x)$ crosses the x-axis from $x=-1...7$. Our function should return values at $x=0,~x=\pi/2,~x=\pi.$
 
-
 ```{code-cell} ipython3
 mn=-1
 mx=7
@@ -191,16 +189,17 @@ plt.plot(xb,np.sin(xb),'s')
 plt.ylabel('$\sin(x)$')
 plt.xlabel('x')
 plt.title('Upper bounds={:.2f},{:.2f},{:.2f}\nLower bounds={:.2f},{:.2f},{:.2f},'.format(*xb[0,:],*xb[1,:]));
+plt.axhline(y=0)
 ```
 
 ## Success - incsearch works
 
 You should see that `incsearch` returns intervals in the correct locations near x=0, x=$\pi/2$ and x=$\pi.$ Now, let's apply it to the freefall problem and discover what mass is necessary to reach 36 m/s at t=4 sec of freefall.
 
-Depending upon what `ns` you choose, you should see that a mass of 142-143 kg will reach 36 m/s in 4 seconds of freefall. 
+Depending upon what `ns` you choose, you should see that a mass of 142-143 kg will reach 36 m/s in 4 seconds of freefall.
 
 ```{code-cell} ipython3
-xb = incsearch(f_m,50,200,ns=100)
+xb = incsearch(f_m,50,200,ns=50)
 
 print('Upper bound on mass = {:.2f} kg'.format(*xb[0,:]))
 print('Lower bound on mass = {:.2f} kg'.format(*xb[1,:]))
@@ -250,7 +249,12 @@ Now, you have reduced your region of interest to just 125-200 kg.
 Divide the region 125-200 kg into two, and repeat the above step. Is the solution in the upper (163-200 kg)? or lower (125-163 kg) region? What are the values of f_m(m)?
 
 ```{code-cell} ipython3
+x=np.array([125,163/2,200])
+fx=f_m(x)
 
+print('f(xmin) = {:.2f}, f(xmid) = {:.2f}, f(xmax)={:.2f}'.format(*fx))
+
+print('Located on the upper, from 163-200')
 ```
 
 ## Bisect Function
@@ -355,8 +359,6 @@ where
 
 $\Delta x = -f(x) \left({\frac{df}{dx}}\right)^{-1}.$
 
-
-
 +++
 
 ## Newton-Raphson example
@@ -394,7 +396,8 @@ We can use the definitions of `f_h` and `dfdh` to calculate the height, $h$ to f
 ```{code-cell} ipython3
 xguess = 2
 deltax = -f_h(xguess)/dfdh(xguess)
-print(xguess+deltax)
+#print(xguess+deltax)
+print(f_h(1))
 ```
 
 ## Discussion
@@ -405,7 +408,7 @@ Try changing the value of `xguess`. Is there any way to choose the best `xguess`
 
 ## Create a Newton-Raphson function
 
-In the same way that you created bracketing method functions, you can create the Newton-Raphson method function to update your `xguess` until a desired tolerance is achieved. 
+In the same way that you created bracketing method functions, you can create the Newton-Raphson method function to update your `xguess` until a desired tolerance is achieved.
 
 ```{code-cell} ipython3
 def newtraph(func,dfunc,x0,es=0.0001,maxit=50):
@@ -501,7 +504,7 @@ def mod_secant(func,dx,x0,es=0.0001,maxit=50):
     ----------
     func = name of function
     dx = perturbation fraction
-    xr = initial guess
+    x0 = initial guess
     es = desired relative error (default = 0.0001 )
     maxit = maximum allowable iterations (default = 50)
     p1,p2,... = additional parameters used by function
@@ -525,7 +528,6 @@ def mod_secant(func,dx,x0,es=0.0001,maxit=50):
         if ea <= es:
             break
     return xr,[func(xr),ea,iter]
-
 ```
 
 ```{code-cell} ipython3
@@ -574,7 +576,7 @@ t=0.58 - 1.43 sec
 
 in this time, the ball had just struck the ground and is traveling upwards. What is the initial velocity necessary to keep it in the air for $\Delta t = 0.85~s$ ?
 
-We know that the ball is acted upon by gravity and the force of drag, but you do not an analytical solution for the position as a function of time. First, let's look at the data you have. 
+We know that the ball is acted upon by gravity and the force of drag, but you do not an analytical solution for the position as a function of time. First, let's look at the data you have.
 
 ```{code-cell} ipython3
 filename = '../data/fallingtennisball02.txt'
@@ -625,7 +627,7 @@ def fall_drag(state,C_d=0.47,m=0.0577,R = 0.0661/2):
     return derivs
 ```
 
-To get the position as a function of time, you can use any of the integration methods that you defined in [03_Get_Oscillations](./03_Get_Oscillations.ipynb). Here you copy in the second-order Runge-Kutta explicit method. 
+To get the position as a function of time, you can use any of the integration methods that you defined in [03_Get_Oscillations](./03_Get_Oscillations.ipynb). Here you copy in the second-order Runge-Kutta explicit method.
 
 ```{code-cell} ipython3
 def rk2_step(state, rhs, dt):
@@ -691,6 +693,10 @@ def f_v(v0,y0=ybounce[0],yT=ybounce[-1],T=(tbounce[0],tbounce[-1]),N=50):
     error = num_sol_drag[-1,0]-yT
     #plt.plot(t_sol,num_sol_drag[:,0])
     return error
+```
+
+```{code-cell} ipython3
+f_v(3.0427999198154425)
 ```
 
 Take a look at the pieces of this function:
@@ -800,7 +806,36 @@ b. Create two functions `f_T` and `dfdT` where `f_T`=$f(T)=\sigma(T) - 0.5$ and 
 c. Use the `incsearch` and `newtraph` functions to find the root of f(T). When does Newton-Raphson fail to converge? Why does it fail? _Hint: if you're stuck here, take a look at this [youtube video finding an interval of convergence for the Newton-Raphson method](https://youtu.be/zyXRo8Qjj0A). Look at the animation of how the method converges and diverges._
 
 ```{code-cell} ipython3
+#Part a
+a0 = 15.0423
+a1 = 0.232
+sigmal = lambda T: np.exp(a0-a1*T)/(1+np.exp(a0-a1*T))-0.5
+plt.plot(sigmal(T));
+plt.axhline(y = 0, color = "black")
+print('It looks like the function crosses the 50% mark at around 60-68 degrees')
+```
 
+```{code-cell} ipython3
+def f_T(T,a0=15.0423,a1=0.232):
+    return np.exp(a0-a1*T)/(1+np.exp(a0-a1*T))-0.5
+
+def dfdT(T1,a0=15.0423,a1=0.232):
+    import sympy as sy
+    sy.var('T')
+    sigma_sym = (sy.exp(a0-a1*T)/(1+sy.exp(a0-a1*T))-0.5)
+    dsigma = sy.diff(sigma_sym,T)
+    dsigma = sy.lambdify(T, dsigma, 'numpy')
+    return dsigma(T1)
+```
+
+```{code-cell} ipython3
+print(incsearch(sigmal,0,100,1000));
+root,stats = newtraph(f_T,dfdT,56,es=0.001,maxit=100)
+print(root)
+'''The issue i am running into with the new-ralph method is if the guess to too far
+ from the actual root (around +- 6), it diverges. This might have to do with the
+ derivative of this specific function being close to zero, thus it has a hard time telling 
+ which direction to go (which interval to cut.)'''
 ```
 
 2. In the examples shown above, you determined the initial velocity after the first bounce by specifying the beginning y(0) and end y(T) for an object subject to gravity and drag. Repeat this analysis for the time period just after the second bounce and just before the third bounce. The indices are given below for t[1430:2051] = 1.43-2.05 seconds.
@@ -810,13 +845,63 @@ c. Use the `incsearch` and `newtraph` functions to find the root of f(T). When d
     b. What is the coefficient of restitution for the second bounce? _Hint: use the ratio of the last velocity from above to the initial velocity calculated here._
 
 ```{code-cell} ipython3
+filename = '../data/fallingtennisball02.txt'
+t, y = np.loadtxt(filename, usecols=[0,1], unpack=True)
 i0=1430
 ie=2051
+tbounce = t[i0:ie]
+ybounce = y[i0:ie]
 print(t[i0],t[ie])
 plt.plot(t,y)
 plt.plot(t[i0:ie],y[i0:ie],'s')
 ```
 
 ```{code-cell} ipython3
+#Moveing f_v down in case of kernal restarts
 
+def f_v(v0,y0=ybounce[0],yT=ybounce[-1],T=(tbounce[0],tbounce[-1]),N=50):
+    ''' define a function f(v) that returns 
+    ymeasured(T)-ypredicted(T)
+    here, the time span is based upon the tbounce variable defined above from 
+    the first bounce to the second bounce
+    
+    arguments:
+    ---------
+    v0: the unknown initial vy velocity component
+    y0: the known initial position
+    yT: the known final position
+    T: a list of two times (beginning time, end time)
+    N: the number of time steps to integrate the RK2 method default = 50
+    
+    returns:
+    --------
+    error: the difference between vmeasured(T) and vpredicted(T)
+        when f_v(v0)= 0, the correct initial velocity was chosen
+    '''
+    
+    
+    # initialize array
+    t_sol=np.linspace(T[0],T[1],N)
+    dt=t_sol[1]-t_sol[0]
+    num_sol_drag = np.zeros([N,2])
+
+    # Set intial conditions
+    num_sol_drag[0,0] = y0
+    num_sol_drag[0,1] = v0
+
+    for i in range(N-1):
+        num_sol_drag[i+1] = rk2_step(num_sol_drag[i], fall_drag, dt)
+    error = num_sol_drag[-1,0]-yT
+    #plt.plot(t_sol,num_sol_drag[:,0])
+    return error
+```
+
+```{code-cell} ipython3
+tbounce = t[i0:ie]
+ybounce = y[i0:ie]
+
+v0,out = mod_secant(f_v,0.0001,5,es=0.000001)
+#By last velocity, I assumed the -v0 of the example 
+print(f'{v0} m/s is the initial velocity of the second bounce \
+the coeff of restitution is {round(v0/4.175915400675785,3)}')
 ```

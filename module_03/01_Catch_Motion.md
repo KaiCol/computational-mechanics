@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -67,7 +67,8 @@ type(reader)
 ```
 
 ```{code-cell} ipython3
-fps = reader.get_meta_data()['fps']
+reader.get_meta_data?
+fps = reader.get_meta_data()
 print(fps)
 ```
 
@@ -192,6 +193,7 @@ Let's get the average vertical distance between two while lines, which you can c
 
 ```{code-cell} ipython3
 gap_lines = y_lines[1:] - y_lines[0:-1]
+print(y_lines[0:-1])
 gap_lines.mean()
 ```
 
@@ -199,7 +201,9 @@ gap_lines.mean()
 
 * Why did you slice the `y_lines` array like that? If you can't explain it, write out the first few terms of the sum above and think!
 
-+++
+```{code-cell} ipython3
+''' The cells are cut like that to allow for the pulling of y_lines starting from the first position while the second term to pull up to the last term. This will allow for the summation on the numerator'''
+```
 
 ### Compute the acceleration of gravity
 
@@ -427,7 +431,7 @@ The x-y-coordinates occur at 1/60 s, 2/60s, ... len(y)/60s = `np.arange(0,len(y)
 
 ```{code-cell} ipython3
 t = np.arange(0,len(y))/60
-np.savez('../data/projectile_coords.npz',t=t,x=x,y=-y)
+#np.savez('../data/projectile_coords.npz',t=t,x=x,y=-y)
 ```
 
 ## Discussion
@@ -435,7 +439,9 @@ np.savez('../data/projectile_coords.npz',t=t,x=x,y=-y)
 * What did you get for the $x$ and $y$ accelerations? What did your colleagues get?
 * Do the results make sense to you? Why or why not?
 
-+++
+```{code-cell} ipython3
+'''Nope, I got less, but thats because I had a double input on frame 68. This dragged the average down thus also changing the acceleration. With an acceleration of 9.18, this makes sense as, the average was dragged down so the acceleration is also lowered'''
+```
 
 ## Numerical derivatives
 
@@ -555,7 +561,54 @@ plt.plot(ay);
     d. Plot the polyfit lines for velocity and position (2 figures) with the finite difference velocity data points and positions. Which lines look like better e.g. which line fits the data?
 
 ```{code-cell} ipython3
+import imageio 
+import numpy as np
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+#problem 1 - loading data
+npz_coords = np.load('../data/projectile_coords.npz')
+t = npz_coords['t']
+x = npz_coords['x']
+y = npz_coords['y']
+#Solving via finite difference
+delta_y = (y[1:] - y[0:-1])
+vy = delta_y * 60
+delta_x = (x[1:] - x[:-1])
+vx = delta_x * 60
+#Polyfit to the first degree
+axm, axb = np.polyfit(t[1:], vx, 1)
+aym, ayb = np.polyfit(t[1:], vy, 1)
 
+print(f'The Acceleration in the X direction is {round(axm,3)} and in the y direction is {round(aym,2)}')
+plt.figure()
+plt.plot(t, (axm*t+ axb), color = "purple", label = "X")
+plt.plot(t, (aym*t+ ayb), color = "orange", label = "Y")
+plt.plot(t[1:], vx, color = "red")
+plt.plot(t[1:], vy, color = "blue")
+plt.xlabel('Time(s)')
+plt.ylabel('Position (m)')
+plt.legend()
+plt.show();
+```
+
+```{code-cell} ipython3
+#Polyfit to the second degree
+axa, axb, axc  = np.polyfit(t, x, 2)
+aya, ayb, ayc = np.polyfit(t, y, 2)
+
+plt.figure()
+plt.plot(t, (axa*t**2+ axb*t + axc),'--',label = "X")
+plt.plot(t, (aya*t**2+ ayb*t + ayc),'--',label = "y")
+plt.plot(t, x)
+plt.plot(t, y)
+plt.xlabel('Time(s)')
+plt.ylabel('Position(m)')
+plt.legend()
+print(f'The acceleration in the x direction is {round(axa*2,3)} and acceleration in the y direction is {round(aya*2,2)}')
+```
+
+```{code-cell} ipython3
+'''The second order polyfit suits the data a lot better than the first order. This should be obvious as the curves fits the data and the accelerations of both polys fits are not that much different from eachother as well as the finite difference method'''
 ```
 
 2. Not only can you measure acceleration of objects that you track, you can look at other physical constants like [coefficient of restitution](https://en.wikipedia.org/wiki/Coefficient_of_restitution), $e$ . 
@@ -571,6 +624,39 @@ plt.plot(ay);
      b. Find the locations when $v_y$ changes rapidly i.e. the impact locations. Get the maximum and minimum velocities closest to the impact location. _Hint: this can be a little tricky. Try slicing the data to include one collision at a time before using  the `np.min` and `np.max` commands._
      
      c. Calculate the $e$ for each of the three collisions
+
+```{code-cell} ipython3
+#import imageio 
+import numpy as np
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+#problem 1 - loading data
+data = np.loadtxt('../data/fallingtennisball02.txt')
+t_hr = data[:,0]
+y_hr = data[:,1]
+#Getting V and plotting
+vy_hr = (y_hr[1:]-y_hr[:-1])/(t_hr[1:]-t_hr[:-1])
+plt.plot(t_hr[0:-1], vy_hr)
+#First Impact
+vmax = vy_hr.max()
+vmin = vy_hr.min()
+e1 = -1*vmax/vmin
+print(f'The e of first collusion/bounce is {round(e1,3)}')
+first_impact = np.where(vy_hr == vmin) # Location of first min
+#Second Impact
+v2 = vy_hr[first_impact[0][0]+10:] #second impact min
+vmin2 = min(v2)
+second_impact = np.where(vy_hr == vmin2) #Slice on second min
+v2 = vy_hr[second_impact[0][0]+10:]
+vmax2 = max(v2)
+print(f'The e of second bounce/collusion is {round(-1*vmax2/vmin2,3)}')
+#Third impact
+vmin3 = min(v2) #Third collusion min
+second_impact = np.where(vy_hr == vmin3) #Slice on second min
+v3 = vy_hr[second_impact[0][0]+10:]
+vmax3 = max(v3)
+print(f'The e of third bounce/collusion is {round(-1*vmax3/vmin3,3)}')
+```
 
 ```{code-cell} ipython3
 

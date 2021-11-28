@@ -291,7 +291,6 @@ plt.hist(dprice, 50, density=True,edgecolor='black')
 plt.plot(x, price_pdf)
 plt.title('APPLE changes in price over 4 years\n'+
          'avg: \${:.2f} stdev: \${:.2f}'.format(mean_dprice, std_dprice));
-
 ```
 
 ```{code-cell} ipython3
@@ -345,12 +344,4 @@ plt.errorbar(APPLE_data_pre_2014['date'][::skip], price_model_avg[::skip],
             zorder = 3);
 plt.legend();
     
-```
-
-```{code-cell} ipython3
-
-```
-
-```{code-cell} ipython3
-
 ```

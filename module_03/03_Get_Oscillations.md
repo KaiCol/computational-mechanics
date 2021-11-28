@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -65,8 +65,7 @@ def eulerstep(state, rhs, dt):
 
 A prototypical mechanical system is a mass $m$ attached to a spring, in the simplest case without friction. The elastic constant of the spring, $k$, determines the restoring force it will apply to the mass when displaced by a distance $x$. The system then oscillates back and forth around its position of equilibrium.
 
-<img src="../images/spring-mass.png" style="width: 400px;"/> 
-
+<img src="../images/spring-mass.png" style="width: 400px;"/>
 
 +++
 
@@ -143,8 +142,8 @@ This worked example follows Reference [1], section 4.3 (note that the source is 
 ```{code-cell} ipython3
 w = 2
 period = 2*np.pi/w
-dt = period/20  # you choose 20 time intervals per period 
-T = 3*period    # solve for 3 periods
+dt = period/2000  # you choose 20 time intervals per period 
+T = 20*period    # solve for 3 periods
 N = round(T/dt)
 ```
 
@@ -558,7 +557,7 @@ $y_{i+1}=y_{i}+f(t_{i},y_{i}) \Delta t$
 $y_{i+1}=y_{i}+
 \frac{f(t_{i},y_{i})+f(t_{i+1},y_{i+1})}{2} \Delta t$
 
-The error is $ error \propto \Delta t^2.$ This is the same convergence as the Modified Euler's method. Let's compare the two methods. 
+The error is $ error \propto \Delta t^2.$ This is the same convergence as the Modified Euler's method. Let's compare the two methods.
 
 +++ {"slideshow": {"slide_type": "subslide"}}
 
@@ -576,9 +575,7 @@ This extra step introduces the topic of solving a nonlinear problem with
 a computer. How can you solve an equation if the value you want is also
 part of our function? You'll take a look at methods to solve this next
 module, but for now lets set a tolerance `etol` for the _implicit_ Heun
-method and see what the resulting solution is. 
-
-
+method and see what the resulting solution is.
 
 ```{code-cell} ipython3
 def heun_step(state,rhs,dt,etol=0.000001,maxiters = 100):
@@ -613,7 +610,7 @@ def heun_step(state,rhs,dt,etol=0.000001,maxiters = 100):
 
 The __benefit__ of an implicit solution is that it is a __stable__ solution. When you solve a set of differential equations, many times it may not be apparent what time step to choose. If you use an _implicit_ integration method, then it may converge at the same rate as an _explicit_ method, but it will always provide bounded errors. 
 
-Consider the spring-mass equation if timesteps are large, in this case you have 10 steps/time period, then the second order Runge-Kutta that you defined above has the same increasing error as the Euler method. 
+Consider the spring-mass equation if timesteps are large, in this case you have 10 steps/time period, then the second order Runge-Kutta that you defined above has the same increasing error as the Euler method.
 
 ```{code-cell} ipython3
 ---
@@ -655,7 +652,7 @@ for i in range(N-1):
 ```{code-cell} ipython3
 plt.plot(t,num_heun[:,0],'o-',label='implicit Heun')
 plt.plot(t,num_rk2[:,0],'s-',label='explicit RK2')
-plt.plot(t,x0*np.cos(w*t))
+plt.plot(t,x0*np.cos(w*t), label='analytical')
 plt.ylim(-8,8)
 plt.legend();
 #plt.xlim(np.max(t)-5,np.max(t))
@@ -664,10 +661,11 @@ plt.legend();
 
 ## Discussion
 
-Change the number of steps per time period in the above solutions for the second order Runge Kutta and the implicit Heun's method. Why do you think the implicit method does not have an increasing magnitude of oscillation? 
+Change the number of steps per time period in the above solutions for the second order Runge Kutta and the implicit Heun's method. Why do you think the implicit method does not have an increasing magnitude of oscillation?
 
 ```{code-cell} ipython3
-
+'''The implicit method is kind of like a self correcting method, it calculates then goes back and reiterates that same step
+this acts like a correctional step that would solve the increasing magnitudes.'''
 ```
 
 ## What you've learned
@@ -699,10 +697,60 @@ Change the number of steps per time period in the above solutions for the second
 1. Show that the implicit Heun's method has the same second order convergence as the Modified Euler's method. _Hint: you can use the same code from above to create the log-log plot to get the error between $2\cos(\omega t)$ and the `heun_step` integration. Use the same initial conditions x(0) = 2 m and v(0)=0m/s and the same RHS function, `springmass`._
 
 ```{code-cell} ipython3
+#Setting Up Huen's Method same as before
+w = 2
+period = 2*np.pi/w
+dt = period/10  # time intervals per period 
+T = 8*period   # simulation time, in number of periods
+N = round(T/dt)
+t = np.linspace(0, T, N)
 
+x0 = 2    # initial position
+v0 = 0    # initial velocity
 ```
 
-<img src="../images/damped-spring.png" style="width: 400px;"/> 
+```{code-cell} ipython3
+dt_values = np.array([period/50, period/100, period/200,period/400,period/1000])
+T = 1*period
+
+num_sol_time = np.empty_like(dt_values, dtype=np.ndarray)
+
+
+for j, dt in enumerate(dt_values):
+
+    N = int(T/dt)
+    t = np.linspace(0, T, N)
+    
+    #initialize solution array
+    num_sol = np.zeros([N,2])
+    
+    
+    #Set intial conditions
+    num_sol[0,0] = x0
+    num_sol[0,1] = v0
+    
+    for i in range(N-1):
+        num_sol[i+1] = heun_step(num_sol[i], springmass, dt)
+
+    num_sol_time[j] = num_sol.copy()
+error_values = np.empty_like(dt_values)
+
+for j, dt in enumerate(dt_values):
+    
+    error_values[j] = get_error(num_sol_time[j], T)
+# plot of convergence for modified Euler's
+fig = plt.figure(figsize=(6,6))
+
+plt.loglog(dt_values, error_values, 'ko-')
+plt.loglog(dt_values, 5*dt_values**2, 'k:')
+plt.grid(True)
+plt.axis('equal')
+plt.xlabel('$\Delta t$')
+plt.ylabel('Error')
+plt.title('Convergence of Huen Method');
+```
+
+<img src="../images/damped-spring.png" style="width: 400px;"/>
 
 +++
 
@@ -733,7 +781,9 @@ def smd(state):
     -------
     derivs: array of two derivatives [v, zeta*w*v - w*w*x]^T
     '''
-    ## your work here ##
+    derivs = np.zeros(state.shape)
+    derivs[0] = state[1]
+    derivs[1] = -0.2*2*state[1] - 2**2*state[0]
     
     return derivs
 ```
@@ -747,6 +797,40 @@ b. second order Runge Kutta method (modified Euler method)
 c. the implicit Heun's method
 
 How many time steps does each method need to converge to the same results? _Remember that each method has a certain convergence rate_
+
+```{code-cell} ipython3
+for N in [100,400,700,1000]:
+    t = np.linspace(0, 6*np.pi, N)
+    dt = t[1]-t[0]
+    state = np.zeros(( N,2))
+    state[0] = [2,0]
+    statee = state.copy()
+    staterk2 = state.copy()
+    stateheun = state.copy()
+    for i in range(1, N):
+        statee[i] = eulerstep(statee[i-1], smd, dt)
+        staterk2[i] = rk2_step(staterk2[i-1], smd, dt)
+        stateheun[i] = heun_step(stateheun[i-1], smd, dt)
+    plt.figure(f"n = {N}")
+    plt.plot(t, statee[:,0], label = f'= Euler')
+    plt.plot(t, staterk2[:,0], label = f'= rk2')
+    plt.plot(t, stateheun[:,0],'--' , label = f'heun')
+    plt.title(f'n = {N}')
+    plt.ylim((-3,3))
+    plt.xlim((0,10))
+    plt.legend(bbox_to_anchor=(1.05,1.0), loc = "upper left")
+#for i in ['euler', 'rk2', 'heun']:
+#    plt.figure(i)
+#    plt.title(f'{i}\'s method')
+#    plt.ylim((-3,3))
+#    plt.xlim((0,10))
+#    plt.legend(bbox_to_anchor=(1.05,1.0), loc = "upper left")
+```
+
+```{code-cell} ipython3
+'''From the looks of it, Heun and rk2 method has very little amount of time steps needed, sub 200 as 100 is too low
+ euler on the other hand takes a lot of steps just to converge, and even then, there are little errors.'''
+```
 
 ```{code-cell} ipython3
 

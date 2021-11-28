@@ -5,12 +5,16 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
+
+```{code-cell} ipython3
+
+```
 
 > __Content modified under Creative Commons Attribution license CC-BY
 > 4.0, code under BSD 3-Clause License © 2020 R.C. Cooper__
@@ -88,7 +92,7 @@ _Note: the direction of positive acceleration was changed to up, so that a posit
 
 ### Step through time
 
-In the code cell below, you define acceleration as a function of velocity and add two parameters `c` and `m` to define drag coefficient and mass of the object.  
+In the code cell below, you define acceleration as a function of velocity and add two parameters `c` and `m` to define drag coefficient and mass of the object.
 
 ```{code-cell} ipython3
 def a_freefall(v,c=0.25,m=60):
@@ -148,7 +152,7 @@ computed variables. Note that you use the Matplotlib
 [`subplot()`](https://matplotlib.org/api/_as_gen/matplotlib.pyplot.subplot.html?highlight=matplotlib%20pyplot%20subplot#matplotlib.pyplot.subplot)
 function to get the two plots in one figure. The argument to `subplot()`
 is a set of three digits, corresponding to the number of rows, number of
-columns, and plot number in a matrix of sub-plots. 
+columns, and plot number in a matrix of sub-plots.
 
 ```{code-cell} ipython3
 # plot velocity and position over time
@@ -234,7 +238,7 @@ v \\ \frac{c}{m}v^2-g
 \end{bmatrix}.
 \end{equation}
 
-Equation (9) above represents the _state_ of the system, at any given instant in time. A code design for the numerical solution that generalizes to other changing systems (or _dynamical systems_) is to write one function that computes the right-hand side of the differential equation (the derivatives of the state variables), and another function that takes a state and applies the numerical method for each time increment. The solution is then computed in one `for` statement that calls these functions. 
+Equation (9) above represents the _state_ of the system, at any given instant in time. A code design for the numerical solution that generalizes to other changing systems (or _dynamical systems_) is to write one function that computes the right-hand side of the differential equation (the derivatives of the state variables), and another function that takes a state and applies the numerical method for each time increment. The solution is then computed in one `for` statement that calls these functions.
 
 +++
 
@@ -323,6 +327,7 @@ Now, let's create a new array, called `num_sol`, to hold the results of the nume
 ```{code-cell} ipython3
 #initialize array
 num_sol = np.zeros([N,2])
+print(num_sol)
 ```
 
 ```{code-cell} ipython3
@@ -337,7 +342,7 @@ for i in range(N-1):
     num_sol[i+1] = eulerstep(num_sol[i], freefall, dt)
 ```
 
-Did it work? Exciting! Let's plot in the same figure both the numerical solution and the experimental data. 
+Did it work? Exciting! Let's plot in the same figure both the numerical solution and the experimental data.
 
 ```{code-cell} ipython3
 fig = plt.figure(figsize=(6,4))
@@ -365,7 +370,9 @@ Create a plot of the analytical solution for y-vs-t for an object that accelerat
 
 _Hint: remember the kinematic equations for constant acceleration_ $y(t) = y(0) + \dot{y}(0)t - \frac{gt^2}{2}$
 
-+++
+```{code-cell} ipython3
+plt.plot(t,y)
+```
 
 ## Air resistance
 
@@ -495,7 +502,11 @@ plt.legend();
 
 * Is the error plotted above related to truncation error? Is it related to roundoff error?
 
-+++
+```{code-cell} ipython3
+'''1. The first thing I see is the numerical solution with drag is almost identical to the expiermental data while the without drag deviates more
+2. The error is due to trunication rather than roundoff, this is becaue the process uses the taylor series approx. and this 
+its an approximation of the taylor series'''
+```
 
 ## What you've learned
 
@@ -534,7 +545,97 @@ _Given:_ y(0) = 1.6 m, v(0) = 0 m/s
 Is there a difference in the two solutions? At what times do the tennis ball and lacrosse balls reach the ground? Which was first?
 
 ```{code-cell} ipython3
+#Tennis ball
+def fall_drag_tennis(state,C_d=0.47,m=0.0577,R = 0.0661/2):
+    '''Computes the right-hand side of the differential equation
+    for the fall of a ball, with drag, in SI units.
+    
+    Arguments
+    ----------    
+    state : array of two dependent variables [y v]^T
+    m : mass in kilograms default set to 0.0577 kg
+    C_d : drag coefficient for a sphere default set to 0.47 (no units)
+    R : radius of ball default in meters is 0.0661/2 m (tennis ball)
+    Returns
+    -------
+    derivs: array of two derivatives [v (-g+a_drag)]^T
+    '''
+    
+    rho = 1.22   # air density kg/m^3
+    pi = np.pi
+    
+    a_drag = -1/(2*m) * pi * R**2 * rho * C_d * (state[1])**2*np.sign(state[1])
+    
+    derivs = np.array([state[1], -9.8 + a_drag])
+    return derivs
+```
 
+```{code-cell} ipython3
+#Lacross
+def fall_drag_lacross(state,C_d=0.47,m=0.140,R = 0.0627/2):
+    '''Computes the right-hand side of the differential equation
+    for the fall of a ball, with drag, in SI units.
+    
+    Arguments
+    ----------    
+    state : array of two dependent variables [y v]^T
+    m : mass in kilograms default set to 0.0577 kg
+    C_d : drag coefficient for a sphere default set to 0.47 (no units)
+    R : radius of ball default in meters is 0.0661/2 m (tennis ball)
+    Returns
+    -------
+    derivs: array of two derivatives [v (-g+a_drag)]^T
+    '''
+    
+    rho = 1.22   # air density kg/m^3
+    pi = np.pi
+    
+    a_drag = -1/(2*m) * pi * R**2 * rho * C_d * (state[1])**2*np.sign(state[1])
+    
+    derivs = np.array([state[1], -9.8 + a_drag])
+    return derivs
+```
+
+```{code-cell} ipython3
+y0 = y[0] # initial position
+v0 = 0    # initial velocity
+N = 576   # number of steps
+# initialize array
+num_sol_dragt = np.zeros([N,2])
+# Set intial conditions
+num_sol_dragt[0,0] = y0
+num_sol_dragt[0,1] = v0
+for i in range(N-1):
+    num_sol_dragt[i+1] = eulerstep(num_sol_dragt[i], fall_drag_tennis, dt)
+fig = plt.figure(figsize=(10,10))
+plt.subplot(211)
+plt.plot(t[:N], num_sol_dragt[:,0], linewidth=2, linestyle='--', label='Tennis')
+
+y0 = y[0] # initial position
+v0 = 0    # initial velocity
+N = 576   # number of steps
+# initialize array
+num_sol_dragl = np.zeros([N,2])
+# Set intial conditions
+num_sol_dragl[0,0] = y0
+num_sol_dragl[0,1] = v0
+for i in range(N-1):
+    num_sol_dragl[i+1] = eulerstep(num_sol_dragl[i], fall_drag_lacross, dt)
+plt.plot(t[:N], num_sol_dragl[:,0], linewidth=2, linestyle='--', label='lacross')
+plt.title('Free fall tennis vs Lacross Ball \n')
+
+plt.xlabel('Time [s]')
+plt.ylabel('$y$ [m]')
+plt.legend();
+
+plt.subplot(212)
+plt.plot(t[:N], abs(num_sol_dragl[:,0]-num_sol_dragt[:,0]), linewidth = 2, linestyle = '-')
+plt.title('Absolute difference in Tennis vs Lacross')
+plt.xlabel('Time [s]')
+plt.ylabel('$y$ [m]')
+'''There is very little difference in the solutions, the only real difference maker is drag and its not even enough to make that much of a difference
+as the side/surfaced area facing the direction of motion is about the same. The lacross ball makes it to the ground slightly faster than the tennis ball due to its 
+smaller radius at 0.572s while the tennis ball lands at 0.575 '''
 ```
 
 ![Projectile motion with drag](../images/projectile.png)
@@ -557,7 +658,7 @@ v_y \\ g - cv_y^2
 \end{bmatrix}, 
 \end{equation}
 
-where $c= \frac{1}{2} \pi R^2 \rho C_d$. 
+where $c= \frac{1}{2} \pi R^2 \rho C_d$.
 
 +++
 
@@ -565,12 +666,10 @@ where $c= \frac{1}{2} \pi R^2 \rho C_d$.
 
     $\mathbf{\dot{y}} = projectile\_drag(\mathbf{y})$
     
-    Below is the start of a function definition, be sure to update the help file. 
-    
-
+    Below is the start of a function definition, be sure to update the help file.
 
 ```{code-cell} ipython3
-def projectile_drag(state,C_d=0.47,m=0.143,R = 0.0661/2):
+def projectile_drag(state,C_d= 0.47,m=0.143,R = 0.0661/2):
     '''Computes the right-hand side of the differential equation
     for the fall of a projectile lacrosee ball, with drag, in SI units.
     
@@ -587,12 +686,18 @@ def projectile_drag(state,C_d=0.47,m=0.143,R = 0.0661/2):
     
     rho = 1.22   # air density kg/m^3
     pi = np.pi
-
+    c = rho*pi*R**2/(2*C_d/m)
+    derivs = np.zeros(state.shape)
+    derivs[0] = state[1]
+    derivs[2] = state[3]
+    derivs[1] = -c*state[1]**2
+    derivs[3] = 9.81 - c*state[3]**2
     return derivs
 ```
 
 ```{code-cell} ipython3
-
+state0 = np.array([0,5,0,5])
+projectile_drag(state0)
 ```
 
 3. Integrate your `projectile_drag` function using the Euler integration method. Use initial conditions from the saved data in lesson  [01_Catch_Motion](01_Catch_Motion.ipynb), there is a numpy `npz` file in the data folder if you want to check your results from lesson 1. The initial conditions in the provided npz file are
@@ -615,6 +720,31 @@ npz = np.load('../data/projectile_coords.npz')
 t3=npz['t']
 x3=npz['x']
 y3=npz['y']
+```
+
+```{code-cell} ipython3
+N = 1000
+t = np.linspace(0,0.4,N)
+dt = t[1]-t[0]
+num_proj = np.zeros((4,N))
+
+num_proj[:,0]=np.array([x3[0],2.6938,-y3[0],-0.0759])
+
+for i in range(1,N):
+    num_proj[:,i] = eulerstep(num_proj[:,i-1], 
+                              lambda state: projectile_drag(state, C_d = 2.5), 
+                              dt)
+plt.plot(num_proj[0,:], -num_proj[2,:], label = "Numerical")
+plt.plot (x3,y3,'--',label = "Data")
+plt.legend();
+```
+
+```{code-cell} ipython3
+'''Yes there is a much more noticable drag force on the ball in the data
+than there is in the euler intergration. The intergration is also a lot smoother
+than the data points plucked from the video. It also seems as though the initial conditions are different
+from the video compared to the intergration. This can be seen from the first few ticks of each line
+where the effects of drag is not as prevalent. '''
 ```
 
 ```{code-cell} ipython3
