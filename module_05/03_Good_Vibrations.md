@@ -4,10 +4,10 @@ jupytext:
   text_representation:
     extension: .md
     format_name: myst
-    format_version: 0.12
-    jupytext_version: 1.6.0
+    format_version: 0.13
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -879,7 +879,50 @@ a. Calculate the natural frequencies and mode shapes _(eigenvectors)_.
 b. Plot the position of $x_1~and~x_2$ if the masses are at rest when mass 2 is given an initial velocity of 2 m/s.
 
 ```{code-cell} ipython3
+#Part A
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 22})
+plt.rcParams['lines.linewidth'] = 3
 
+m1=m2=0.1 # kg
+k1=k3=1000 # N/m
+k2=500 # N/m
+
+M=np.array([[m1,0],[0,m2]])
+K=np.array([[k1+k2,-k2],[-k2,k2+k3]])
+
+from scipy import linalg
+e,v=linalg.eig(K,M)
+
+print('eigenvalue 1:,\t eigenvector 1:\n',e[0],'\t',v[:,0]/v[0,0])
+print('----------------------')
+print('eigenvalue 2:,\t eigenvector 2:\n',e[1],'\t',v[:,1]/v[1,0])
+print('')
+
+w1=np.sqrt(e[0].real)/2/np.pi
+v1=v[:,0]/max(v[:,0])
+
+w2=np.sqrt(e[1].real)/2/np.pi
+v2=v[:,1]/max(v[:,1])
+print('1st natural frequency is %1.2f Hz, \
+     mode shape: %1.0f*x1(t)=%1.0f*x2(t)'%(w1,v1[0],v1[1]))
+print('2nd natural frequency is %1.2f Hz, \
+    mode shape: %1.0f*x1(t)=%1.0f*x2(t)'%(w2,v2[0],v2[1]))
+
+T=2*1/w1 # 2 x longest period
+dt=1/w2/10 # shortest period
+t=np.arange(0,T,dt)
+state=np.zeros((4,len(t)))
+state[:,0]=np.array([0,0,0,2]) # set initial conditions
+for i in range(0,len(t)-1):
+    state[:,i+1]=heun_step(state[:,i],spring_mass,dt)
+#Part B
+plt.plot(t,state[0,:]*100,label='x_1')
+plt.plot(t,state[1,:]*100,label='x_2')
+plt.xlabel('time (s)')
+plt.ylabel('position (cm)')
+plt.legend();
 ```
 
 2. Consider the G-string on the guitar, L=0.64 m, $\mu=1.14~g/m,$ and T=71.81 N [1]. 
@@ -889,16 +932,124 @@ __Guitar string equation:__ $\mu\frac{\partial^2 y}{\partial t^2}=T\frac{\partia
 a. Calculate the first and second natural frequencies using 6, 30, 45, and 60 nodes. Plot the mode shapes to demonstrate convergence.
 
 ```{code-cell} ipython3
+L=0.64 # m
+T=71.81#N
+mu=1.14e-3 # kg/m
 
+N = [6,30,45,60]
+nat = np.ones(len(N))*((1/(2*0.64))*np.sqrt(71.81/1.14e-3))
+natfq1 = np.zeros(4)
+natfq2 = np.zeros(4)
+
+for i in range(len(N)):
+    dx=L/(N[i]+1)
+
+    k = T/dx**2/mu
+
+    A = k*(np.diag(np.ones(N[i])*2)\
+           -np.diag(np.ones(N[i]-1),-1)\
+           -np.diag(np.ones(N[i]-1),1))
+    
+    e,v=linalg.eig(A)
+    isort = np.argsort(e.real)
+    e=e[isort]
+    v=v[:,isort]
+
+    f1=np.sqrt(e.real[0])/2/np.pi
+    fn=np.sqrt(e.real[-1])/2/np.pi
+
+    nf1 = e.real[0]**0.5/2/np.pi
+    nf2 = e.real[1]**0.5/2/np.pi
+    natfq1[i] = nf1
+    natfq2[i] = nf2
+    print(f'Natural Frequencies of {N[i]} Nodes')
+    print('First natural frequency :',nf1,'Hz')
+    print('Second natural frequency :',nf2,'Hz \n')
+    
+plt.plot(N,natfq1,label='freq vs. nodes')
+plt.plot(N,nat,label='natural freq')
+plt.title('first mode')
+plt.figure()
+plt.plot(N,natfq2,label='freq vs. nodes')
+plt.plot(N,2*nat,label='natural freq')
+plt.title('second mode')
 ```
 
 b. Use 60 nodes to create an animation using the following initial condition, $y(x,0)=0$ and $\dot{y}(L/2,0)=2~m/s.$ e.g. `dy[30,0]=2`.
 
 ```{code-cell} ipython3
+L=0.64 # 64-cm guitar string
+T=71.81 # 9kg*9.81 m/s/s # N
+mu=1.14e-3 # kg/m
 
+N=60 # 60-node guitar string
+dx=L/(N+1)
+k = T/dx**2/mu
+A = k*(np.diag(np.ones(N)*2)\
+       -np.diag(np.ones(N-1),-1)\
+       -np.diag(np.ones(N-1),1))
+e,v=linalg.eig(A)
+isort = np.argsort(e.real)
+e=e.real[isort]
+v=v.real[:,isort]
+
+f1=np.sqrt(e.real[0])/2/np.pi
+fn=np.sqrt(e.real[-1])/2/np.pi
+
+T1 = 10/f1 
+dt=1/fn/10
+t=np.arange(0,T1,dt)
+tsteps=len(t)
+x=np.linspace(0,L,N+2)
+y=np.zeros((N,tsteps))
+y[:,0]=0.1*x[1:-1]-0.2*(x[1:-1]-L/2)*(x[1:-1]>L/2)
+dy=np.zeros((N,tsteps))
+for i in range(0,tsteps-1):
+    state = np.block([y[:,i],dy[:,i]]) # set z=[y,dy]
+    next_state = heun_step(state,wave_equation,dt) # get next state
+    y[:,i+1]=next_state[0:N] # save the postions
+    dy[:,i+1]=next_state[N:] # save the velocities
+ybcs = np.pad(y,((1,1),(0,0)))
+
+from matplotlib import animation
+from IPython.display import HTML
+
+fig, ax = plt.subplots()
+
+ax.set_xlim(( 0, L))
+ax.set_ylim((-0.11, 0.11))
+ax.set_xlabel('x-position (m)')
+ax.set_ylabel('y-position (m)')
+ax.plot(x[[0,-1]],[0,0],'o')
+
+line, = ax.plot([], [], lw=2)
+
+def init():
+    line.set_data([], [])
+    return (line,)
+
+def animate(i):
+    line.set_data(x, ybcs[:,i])
+    return (line,)
+
+anim = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=range(0,tsteps,10), interval=10, 
+                               blit=True)
+print('Animation of String from t=0-{:.1f} ms every {:.2f} ms'.format(t[-1]*1000,t[10]*1000))
+HTML(anim.to_html5_video())
 ```
 
 c. Use 60 nodes to create an audio display using the following initial condition, $y(x,0)=0$ and $\dot{y}(L/2,0)=2~m/s.$ e.g. `dy[30,0]=2`.
+
+```{code-cell} ipython3
+samplerate = int(1/dt)
+out_file=100*np.array([dy[0,:] for i in range(30)]).reshape(-1,)
+plt.plot(range(0,len(out_file))*dt*1000,out_file)
+plt.xlim((0,200))
+plt.xlabel('time (ms)')
+plt.ylabel('input signal (a.u.)')
+Audio(data=out_file,rate=samplerate)
+```
 
 ```{code-cell} ipython3
 

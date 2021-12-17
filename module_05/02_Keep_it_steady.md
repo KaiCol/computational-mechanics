@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -80,7 +80,7 @@ If you divide the fin into 6 equally spaced sections, you have 6 equations with 
 
 6. $T_5-2T_6+T_7+\Delta x^2 h'(T_{\infty}-T_6) = 0 \leftarrow T_7 = \frac{-h\Delta x}{k}(T_{6}-T_{\infty})+T_5$
 
-where $h'=\frac{2h}{\kappa R}$ is the modified convective heat transfer for the fin. And your boundary conditions give us values for $T_{0}~and~T_{7}.$ You can plug in constants for forced air convection, $h=100~W/m^2K$, aluminum fin, $\kappa=200~W/mK$, and 60-mm-long and 1-mm-radius fin, the air is room temperature, $T_{\infty}=20^oC$, and the base is $T_{base}=T_{0}=100^oC$. 
+where $h'=\frac{2h}{\kappa R}$ is the modified convective heat transfer for the fin. And your boundary conditions give us values for $T_{0}~and~T_{7}.$ You can plug in constants for forced air convection, $h=100~W/m^2K$, aluminum fin, $\kappa=200~W/mK$, and 60-mm-long and 1-mm-radius fin, the air is room temperature, $T_{\infty}=20^oC$, and the base is $T_{base}=T_{0}=100^oC$.
 
 ```{code-cell} ipython3
 import numpy as np
@@ -160,6 +160,7 @@ Below, lets compare your solution to the [analytical solution](https://en.wikipe
 $T(x)=20+80\frac{\cosh(s(L-x))+\frac{h}{sk}\sinh(s(L-x))}{\cosh(sL)+\frac{h}{sk}\sinh(sL)}$
 
 ```{code-cell} ipython3
+import numpy as np
 L=60e-3
 s=np.sqrt(hp)
 F=lambda x: 20+80*(np.cosh(s*L-s*x)+h/s/k*np.sinh(s*L-s*x))/(np.cosh(s*L)+h/s/k*np.sinh(s*L))
@@ -309,7 +310,7 @@ plt.plot(x,w_an*1000)
 
 ### Exercise 
 
-Divide the simply-supported beam into 12 sections and plot the deflection as a function of distance along the beam with a uniform load. 
+Divide the simply-supported beam into 12 sections and plot the deflection as a function of distance along the beam with a uniform load.
 
 ```{code-cell} ipython3
 
@@ -349,10 +350,56 @@ b. Set up and solve the finite difference equations for $\Delta x=5~mm$, plot th
 
 c. Set up and solve the finite difference equations for $\Delta x=1~mm$, plot the resulting temperature $T(x)$. 
 
-d. Plot the heat flux through the fin, $-\kappa \frac{dT}{dx}$. 
+d. Plot the heat flux through the fin, $-\kappa \frac{dT}{dx}$.
 
 ```{code-cell} ipython3
-
+T0 = 100
+T60 = 25
+Tinfin=20
+k = 200
+h = 100
+R = 0.001
+hp = (2*h)/(k*R)
+L = 0.06
+mm=np.array([1,5,10])
+step=np.zeros(len(mm))
+for i in range(3):
+    step[i] = L/mm[i]
+i=-1
+for dx in step:
+    i+=1
+    N = mm[i]
+    diag_factor= (-2/(dx**2))-hp # diagonal multiplying factor
+    A = np.diag(np.ones(N)*diag_factor)+np.diag(np.ones(N-1)/(dx**2),-1)+np.diag(np.ones(N-1)/(dx**2),1)
+    b = -1*np.ones(N)*hp*Tinfin
+    b[0]+=-(T0/(dx**2))
+    b[-1]+=-(T60/(dx**2))
+    #print('finite difference A:\n------------------')
+    #print(A)
+    #print('\nfinite difference b:\n------------------')
+    #print(b)
+    T=np.linalg.solve(A,b)
+    #print('\nfinite difference solution T(x):\n------------------')
+    #print(T)
+    #print('\nfinite difference solution at x (mm)=\n------------------')
+    #print(np.arange(1,N)*dx*1000)
+    x=np.arange(0,N+2)*dx
+    plt.figure()
+    plt.title(f'Temp Flow for dx = {dx}')
+    plt.plot(x[1:-1]*1000,T,'ro-',label='finite difference')
+    plt.plot(x[0]*1000,T0,'rs-',label='T0 Temp')
+    plt.plot(x[-1]*1000,T60,'rs-',label='T60 Temp')
+    plt.xlabel('distance along fin (mm)')
+    plt.ylabel('Temperature (C)')
+    plt.legend(bbox_to_anchor=(1,0.5),loc='center left');
+    #print(x)
+    plt.figure()
+    plt.title(f'Heat Flux for dx = {dx}')
+    h = x[1]-x[0]
+    dT_c=(T[2:]-T[:-2])/(2*h)
+    heat_flux = dT_c * -k
+    plt.plot(x[2:-2],heat_flux,'s-',label='Heat Hlux Through the Fin')
+    plt.legend(bbox_to_anchor=(1,0.5),loc='center left');
 ```
 
 2. Consider the encastre beam shown in the __Static Beam deflections__ section. Use the following material and geometry (1-m steel rod 1-cm-by-1-cm) with 100 N/m load applied
@@ -375,5 +422,80 @@ b. Create a finite difference approximation with 10, 20, 30, and 40 segments.
 c. Plot the error between the maximum predicted numerical deflection (b) and the analytical deflection (a). What is the convergence rate of the finite difference approximation?
 
 ```{code-cell} ipython3
+#part A
+L=1
+E=200e9
+I=0.01**4/12
+q=100
+#analyically solve
+A = (-q)/2
+B = (1/6)*((-q-(3*A)))
+C = 0
+D = 0
+wa = ((q*(x**4))/24)+((A*(x**3))/6)+((B*(x**2))/2)+(C*x)+D
 
+x = np.linspace(0,1,101)
+
+plt.plot(x,-wa)
+plt.title('Static beam Deflection')
+plt.xlabel('Length of Beam')
+plt.ylabel('Deflection in y');
+```
+
+```{code-cell} ipython3
+#part B
+Segs = np.array([10,20,30,40])
+E=200e9
+I=0.01**4/12
+q=100
+
+for i in Segs:
+    N = i
+    h=L/N
+    A=np.diag(np.ones(N-1)*6)\
+    +np.diag(np.ones(N-2)*-4,-1)\
+    +np.diag(np.ones(N-2)*-4,1)\
+    +np.diag(np.ones(N-3),-2)\
+    +np.diag(np.ones(N-3),2)
+    A[0,0]+=1
+    A[-1,-1]+=1
+
+    b=-np.ones(N-1)*q/E/I*h**4
+
+    w=np.linalg.solve(A,b)
+    xnum=np.arange(0,L+h/2,h)
+    #print('finite difference A:\n------------------')
+    #print(A)
+    #print('\nfinite difference b:\n------------------')
+    #print(b)
+    #print('\ndeflection of beam (mm)\n-------------\n',w*1000)
+    #print('at position (m) \n-------------\n',xnum[1:-1])
+    plt.figure(1)
+    plt.title('Deflection of Encastre Beam')
+    plt.xlabel('Length (m)')
+    plt.ylabel('Y deflection (m)')
+    plt.plot(xnum[1:-1],w, label = f'{i} Segments')
+    plt.legend(bbox_to_anchor=(1,0.5),loc='center left');
+    plt.figure(2)
+    plt.title('Error vs Segments')
+    plt.xlabel('Segments')
+    plt.ylabel('Error')
+    error = abs(max(wa)-max(w))
+    print(error)
+    plt.plot(i,error,'o',zorder = 3)
+    
+error = [0.26066416666666653,0.26047901041666655,0.2604444135802468,0.2604322819010415]
+x = np.linspace(10,40)
+plt.figure(2)
+a1 ,b1= np.polyfit(Segs,error, 1)
+a2, b2, c2= np.polyfit(Segs,error, 2)
+a3, b3, c3, d3 = np.polyfit(Segs,error, 3)
+plt.plot(x,a1*x+b1, label = "First Degree",zorder = 2)
+plt.plot(x,a2*x**2+b2*x+c2,label = "Second Degree",zorder = 2 )
+plt.plot(x,a3*x**3+b3*x**2+c3*x+d3,label = "Third Degree",zorder = 2)
+plt.legend(bbox_to_anchor=(1,0.5),loc='center left');
+```
+
+```{code-cell} ipython3
+'''Looks like it converges to the third degree from a poly fit'''
 ```

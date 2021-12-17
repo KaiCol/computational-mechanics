@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -499,7 +499,7 @@ U=np.array([[-7,3,0],[0,-16,12],[0,0,-9]])
 
 Use the `@`-symbol to confirm LU = A. 
 
-`L@U` 
+`L@U`
 
 ```{code-cell} ipython3
 
@@ -549,7 +549,7 @@ y_{1} \\
 y_{2} \\
 y_{3}\end{array}\right]$
 
-You can solve these equations without Gauss elimination. You just need to use a __forward substitution__ for $\mathbf{Ly}=\mathbf{b}$ and a __backward substitution__ for $\mathbf{Ux}=\mathbf{y}$. 
+You can solve these equations without Gauss elimination. You just need to use a __forward substitution__ for $\mathbf{Ly}=\mathbf{b}$ and a __backward substitution__ for $\mathbf{Ux}=\mathbf{y}$.
 
 ```{code-cell} ipython3
 def solveLU(L,U,b):
@@ -614,7 +614,6 @@ In the last two comparisons, it is not always immediately obvious that the LU-de
 * $x_1=[0...50]~mg/m^3$
 
 * $x_2=[0...50]~mg/m^3$
-
 
 ```{code-cell} ipython3
 N=51 # meshgrid is NxN
@@ -850,7 +849,7 @@ a. $\left[ \begin{array}{cccc}
 2/3 \end{array} \right]\neq
 \left[ \begin{array}{c}
 2 \\
-1 \end{array} \right]$ 
+1 \end{array} \right]$
 
 ```{code-cell} ipython3
 Aa@np.array([0,2/3])
@@ -868,7 +867,7 @@ x_{2} \end{array} \right]=
 1.0000 \\
 2 \end{array} \right]$
 
-and the solution changes to $x_1=1/3$ and $x_2=2/3$. This solution satisfies our initial equations. 
+and the solution changes to $x_1=1/3$ and $x_2=2/3$. This solution satisfies our initial equations.
 
 ```{code-cell} ipython3
 Aa = np.array([[1,1],[1e-19,3]])
@@ -905,7 +904,7 @@ print(aug_b)
 
 ## Exercise
 
-Swap row 1 with either row 2 or row 3. What is the solution for `x_b` now? Show that if you plug in the solution for $[x_1,~x_2,~x_3]$ into the unpivoted $\mathbf{A}$ that the result is $[8,~-3,~5]$. 
+Swap row 1 with either row 2 or row 3. What is the solution for `x_b` now? Show that if you plug in the solution for $[x_1,~x_2,~x_3]$ into the unpivoted $\mathbf{A}$ that the result is $[8,~-3,~5]$.
 
 ```{code-cell} ipython3
 
@@ -1010,8 +1009,41 @@ m_{3}g \\
 m_{4}g \end{array} \right]$
 
 ```{code-cell} ipython3
+#Using LinearAlge
+import numpy as np
+m1 = 1
+m2 = 2
+m3 = 3
+m4 = 4
+k = 100
+g = 9.8
 
+A = np.array([[2*k,-k,0,0],
+            [-k,2*k,-k,0],
+            [0,-k,2*k,-k],
+            [0,0,-k,k]])
+b = np.array([[m1*g],
+              [m2*g],
+              [m3*g],
+              [m4*g]])
+x = np.linalg.solve(A,b)
+for i in range(4):
+    print(f'x{i+1} is {x[i]}')
 ```
+
+```{code-cell} ipython3
+#Using Automated Gauss
+Ab = np.array([[2*k,-k,0,0,m1*g],
+            [-k,2*k,-k,0,m2*g],
+            [0,-k,2*k,-k,m3*g],
+            [0,0,-k,k,m4*g]])
+x, Aug = GaussNaive(A,b)
+
+print('x=  \t\tAug=')
+for i in range(len(x)):
+    print('{:.2f}\t\t'.format(x[i]) , Ab[i])
+```
+
 
 ![Triangular truss](../images/truss.png)
 
@@ -1037,10 +1069,49 @@ a. Create the system of equations, $\mathbf{Ax}=\mathbf{b}$, when $\alpha=35^o$,
 
 b. Solve for the $\mathbf{LU}$ decomposition of $\mathbf{A}$. 
 
-c. Use the $\mathbf{LU}$ solution to solve for the tension in bar 1 $(P_1)$ every 10 N values of force, F, between 100 N and 1100 N. Plot $P_1~vs~F$. 
+c. Use the $\mathbf{LU}$ solution to solve for the tension in bar 1 $(P_1)$ every 10 N values of force, F, between 100 N and 1100 N. Plot $P_1~vs~F$.
 
 ```{code-cell} ipython3
+#Part A
+a = np.radians(35)
+b = np.radians(40)
+f = 1000 #N
 
+A = np.array([[1, np.cos(a), 0],
+             [0,-2*np.cos(b/2),0],
+             [0, np.sin(a), 1]])
+B = np.array([0, f, 0])
+Ab = np.array([[1, np.cos(a), 0, 0],
+               [0, -2*np.cos(b/2), 0, f],
+               [0, np.sin(a), 1, 0]])
+#print (Ab)
+
+x, Aug = GaussNaive(A,B)
+print('x=  \t\tAug=')
+for i in range(len(x)):
+    print('{:.2f}\t\t'.format(x[i]) , Ab[i])
+```
+
+```{code-cell} ipython3
+#Part B
+L,U = LUNaive(A)
+print(f'L Matrix is\n {L} \nU Matrix\n is {U}')
+```
+
+```{code-cell} ipython3
+#Part C
+N = 110
+f1 = np.linspace(100,1100,N)
+x = np.zeros(N)
+
+for i in range(N):
+    p1 = np.array([0,f1[i],0])
+    a = solveLU(L,U,p1)
+    x[i] = a[0]
+
+plt.plot(f1,x)
+plt.ylabel('tension')
+plt.xlabel('force')
 ```
 
 3. Using the same truss as shown above, let's calculate the tension in bar 1, $P_1$, when $\theta=[0...90^o]$ and $F=[100...1100]~kN$. When $\theta\neq 0$, the resulting 6 equations and 6 unknowns are given in the following matrix
@@ -1072,7 +1143,55 @@ a. Create the system of equations, $\mathbf{Ax}=\mathbf{b}$, when $\alpha=35^o$,
 
 b. Solve for the $\mathbf{PLU}$ decomposition of $\mathbf{A}$. 
 
-c. Use the $\mathbf{PLU}$ solution to solve for the tension in bar 1 $(P_1)$ every 10 N values of force, F, between 100 N and 1100 N. Plot $P_1~vs~F$. 
+c. Use the $\mathbf{PLU}$ solution to solve for the tension in bar 1 $(P_1)$ every 10 N values of force, F, between 100 N and 1100 N. Plot $P_1~vs~F$.
+
+```{code-cell} ipython3
+a = np.radians(35)
+b = np.radians(40)
+theta = np.radians(45)
+F = 1000 #N
+
+A = np.array([[1, np.cos(a), 0, 0, 1, 0],
+              [0,np.sin(a),0,1,0,0],
+              [0, np.cos(b/2),np.cos(b/2),0,0,0],
+              [0,-np.sin(b/2),np.sin(b/2),0,0,0],
+              [-1,0,np.cos(a),0,0,0],
+              [0,0,np.sin(a),0,0,1]])
+B = np.array([0,0,F*np.cos(theta),-F*np.sin(theta),0,0])
+AB =  np.array([[0,np.sin(a),0,1,0,0,0],
+             [1, np.cos (a), 0, 0, 1, 0,0],
+             [0, np.cos(b/2),np.cos(b/2),0,0,0,F*np.cos(theta)],
+             [0,-np.sin(b/2),np.sin(b/2),0,0,0,-F*np.sin(theta)],
+             [-1,0,np.cos(a),0,0,0,0],
+             [0,0,np.sin(a),0,0,1,0]])
+
+x, Aug = GaussNaive(A,B)
+print(x)
+print('x=   \t\tAug=')
+for i in range(len(x)):
+    print('{:.2f}\t\t'.format(x[i]) , AB[i])
+```
+
+```{code-cell} ipython3
+#Part b
+L, U = LUNaive(A)
+print(f'L Matrix is\n {L} \nU Matrix\n is {U}')
+```
+
+```{code-cell} ipython3
+#Part c
+N = 110
+f2 = np.linspace(100,1100,N)
+x = np.zeros(N)
+
+for i in range(N):
+    p = np.array([0,0,f2[i]*np.cos(theta),-f2[i]*np.sin(theta),0,0])
+    a = solveLU(L,U,p)
+    x[i] = a[1]
+plt.plot(f2,x)
+plt.ylabel('tension')
+plt.xlabel('force')
+```
 
 ```{code-cell} ipython3
 

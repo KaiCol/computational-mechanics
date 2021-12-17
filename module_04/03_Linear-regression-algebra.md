@@ -5,9 +5,9 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.10.3
+    jupytext_version: 1.11.4
 kernelspec:
-  display_name: Python 3
+  display_name: Python 3 (ipykernel)
   language: python
   name: python3
 ---
@@ -497,7 +497,43 @@ e. Repeat b-d for orders 2,3,4,...,10
 f. Plot the error in __testing-training__ error vs the order of the polynomial fit
 
 ```{code-cell} ipython3
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+data = '../data/land_global_temperature_anomaly-1880-2016.csv'
 
+temp_data = pd.read_csv(data,skiprows=4)
+t = (temp_data['Year'].values-1880)/len(t_data)
+T = temp_data['Value'].values
+
+np.random.seed(103)
+irand = np.random.randint(0,len(t),size=len(t))
+tp = 0.7
+train1 = t[irand[:int(len(t)*tp)]]
+train2 = T[irand[:int(len(t)*tp)]]
+test1 = t[irand[int(len(t)*tp):]]
+test2 = T[irand[int(len(t)*tp):]]
+
+Z=np.block([[train1**0]]).T
+Z_test=np.block([[test1**0]]).T
+
+
+max_ites=11
+SSE_train=np.zeros(max_ites)
+SSE_test=np.zeros(max_ites)
+for i in range(1,max_ites):
+    Z=np.hstack((Z,train1.reshape(-1,1)**i))
+    Z_test=np.hstack((Z_test,test1.reshape(-1,1)**i))
+    A = np.linalg.solve(Z.T@Z,Z.T@train2)
+    SSE_train[i] = np.sum((train2-Z@A)**2)/len(train2)
+    SSE_test[i] = np.sum((test2-Z_test@A)**2)/len(test2)
+
+plt.semilogy(np.arange(1,max_ites),SSE_train[1:],label='training error')
+plt.semilogy(np.arange(1,max_ites),SSE_test[1:],label='testing error')
+plt.legend();
+plt.ylabel('order number')
+plt.xlabel('sum of square error');
 ```
 
 <img src="../images/prony-series.png" style="width: 300px;"/> <img src="../images/stress_relax_wheat.png" style="width: 400px;"/> 
@@ -519,7 +555,21 @@ c. Solve for the constants, $a_1,~a_2,~a_3,~a_4~,a_5$
 d. Plot the best-fit function and the data from `../data/stress_relax.dat` _Use at least 50 points in time to get a smooth best-fit line._
 
 ```{code-cell} ipython3
+data = '../data/stress_relax.dat'
+stress = pd.read_csv(data)
+t = stress['time (sec)'].values
+T = stress['stress (MPa)'].values
 
+ 
+Z = np.block([[np.exp(-t/1.78)],[np.exp(-t/11)],[np.exp(-t/53)],[np.exp(-t/411)],[t**0]]).T
+fit = np.linalg.solve(Z.T@Z,Z.T@T)
+plt.plot(t,T,'o-',label='Measured')
+plt.plot(t,Z@fit,label='best-fit')
+plt.title('Fit to Wheat Viscoelasticity')
+plt.legend();
+plt.ylabel('Stress (MPa)')
+plt.xlabel('Time (sec)')
+print(fit)
 ```
 
 3. Load the '../data/primary-energy-consumption-by-region.csv' that has the energy consumption of different regions of the world from 1965 until 2018 [Our world in Data](https://ourworldindata.org/energy). 
@@ -531,6 +581,44 @@ a. Use a piecewise least-squares regression to find a function for the energy co
 energy consumed = $f(t) = At+B+C(t-1970)H(t-1970)$
 
 c. What is your prediction for US energy use in 2025? How about European energy use in 2025?
+
+```{code-cell} ipython3
+fname = '../data/primary-energy-consumption-by-region.csv'
+data = pd.read_csv(fname)
+EUROPE = data[data['Entity']=='Europe']
+USA = data[data['Entity']=='United States']
+t = USA['Year'].values
+T = USA['Primary Energy Consumption (terawatt-hours)'].values
+
+Z= np.block([[t],[t**0],[(t-1970)*(t>=1970)]]).T
+fit = np.linalg.solve(Z.T@Z,Z.T@T)
+plt.plot(t,T,'o-',label='Data')
+plt.plot(t,Z@fit,label='best-fit')
+plt.title('Fit to Energy Consumption in US')
+plt.ylabel('Usage TW/hr')
+plt.xlabel('Year')
+plt.legend();
+
+slope = (Z@fit)[-1] - (Z@fit)[-2]
+e2025 = (Z@fit)[-1]+7*slope
+print(f'In 2025, US usage is going to be {e2025}')
+
+t = EUROPE['Year'].values
+T = EUROPE['Primary Energy Consumption (terawatt-hours)'].values
+
+Z= np.block([[t],[t**0],[(t-1970)*(t>=1970)]]).T
+fit = np.linalg.solve(Z.T@Z,Z.T@T)
+plt.figure()
+plt.plot(t,T,'o-',label='Data')
+plt.plot(t,Z@fit,label='best-fit')
+plt.title('Fit to Energy Consumption in EU')
+plt.ylabel('Usage TW/hr')
+plt.xlabel('Year')
+plt.legend();
+slope = (Z@fit)[-1] - (Z@fit)[-2]
+e2025 = (Z@fit)[-1]+7*slope
+print(f'In 2025, EU usage is going to be {e2025}')
+```
 
 ```{code-cell} ipython3
 

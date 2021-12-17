@@ -832,10 +832,10 @@ def dfdT(T1,a0=15.0423,a1=0.232):
 print(incsearch(sigmal,0,100,1000));
 root,stats = newtraph(f_T,dfdT,56,es=0.001,maxit=100)
 print(root)
-'''The issue i am running into with the new-ralph method is if the guess to too far
- from the actual root (around +- 6), it diverges. This might have to do with the
- derivative of this specific function being close to zero, thus it has a hard time telling 
- which direction to go (which interval to cut.)'''
+print('The issue i am running into with the new-ralph method is if the guess to too far\
+ from the actual root (around +- 6), it diverges. This might have to do with the\
+ derivative of this specific function being close to zero, thus it has a hard time telling \
+ which direction to go (which interval to cut.')
 ```
 
 2. In the examples shown above, you determined the initial velocity after the first bounce by specifying the beginning y(0) and end y(T) for an object subject to gravity and drag. Repeat this analysis for the time period just after the second bounce and just before the third bounce. The indices are given below for t[1430:2051] = 1.43-2.05 seconds.
@@ -904,4 +904,8 @@ v0,out = mod_secant(f_v,0.0001,5,es=0.000001)
 #By last velocity, I assumed the -v0 of the example 
 print(f'{v0} m/s is the initial velocity of the second bounce \
 the coeff of restitution is {round(v0/4.175915400675785,3)}')
+```
+
+```{code-cell} ipython3
+
 ```
